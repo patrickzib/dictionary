@@ -1,5 +1,10 @@
 # WEASEL 2.0 - A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory Time Series Classification
 
+WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-parameter ensembling to obtain a fast, accurate, and constrained memory TSC. WEASEL 2.0 is significantly more accurate than its predecessor dictionary methods (BOSS, TDE, WEASEL), and in the same group as SotA non-ensemble methods. 
+
+<p float="center">
+  <img src="images/UCR_accuracy_subset.png" width="100%" />
+</p>
 
 ## Installation
 
