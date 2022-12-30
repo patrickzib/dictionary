@@ -20,7 +20,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
 
 from sktime.classification.base import BaseClassifier
-from sktime.transformations.panel.dictionary_based import SFADilation
+from weasel.transformations.panel.dictionary_based import SFADilation
 
 
 class MUSE_V2(BaseClassifier):
