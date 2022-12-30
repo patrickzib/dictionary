@@ -211,7 +211,7 @@ class MUSE_V2(BaseClassifier):
         else:
             all_words = hstack((all_words))
 
-        self.clf = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)
+        self.clf = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10))
 
         self.clf.fit(all_words, y)
         self.total_features_count = all_words.shape[-1]
