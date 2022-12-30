@@ -12,16 +12,12 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
 
-# from sklearn.feature_selection import SelectPercentile, chi2
 from sklearn.linear_model import RidgeClassifierCV
 
-# from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
 
 from sktime.classification.base import BaseClassifier
 from sktime.transformations.panel.dictionary_based import SFADilation
-
-# from sktime.transformations.panel.rocket import MiniRocket
 
 
 class WEASEL_V2(BaseClassifier):
@@ -33,37 +29,15 @@ class WEASEL_V2(BaseClassifier):
     on this bag.
 
     There are these primary parameters:
-            alphabet_size: alphabet size
-            chi2-threshold: used for feature selection to select best words
-            anova: select best l/2 fourier coefficients other than first ones
-            bigrams: using bigrams of SFA words
-            binning_strategy: the binning strategy used to discretise into
-                             SFA words.
-    WEASEL slides a window length w along the series. The w length window
-    is shortened to an l length word through taking a Fourier transform and
-    keeping the best l/2 complex coefficients using an anova one-sided
-    test. These l coefficients are then discretised into alpha possible
-    symbols, to form a word of length l. A histogram of words for each
-    series is formed and stored.
-    For each window-length a bag is created and all words are joint into
-    one bag-of-patterns. Words from different window-lengths are
-    discriminated by different prefixes.
-    fit involves training a logistic regression classifier on the single
-    bag-of-patterns.
+            TODO
+    
 
-    predict uses the logistic regression classifier
 
     Parameters
     ----------
-    anova: boolean, default=True
-        If True, the Fourier coefficient selection is done via a one-way
-        ANOVA test. If False, the first Fourier coefficients are selected.
-        Only applicable if labels are given
-    bigrams: boolean, default=True
-        whether to create bigrams of SFA words
-    binning_strategies: ["equi-depth", "equi-width", "information-gain"],
-    default="information-gain"
-        The binning method used to derive the breakpoints.
+    n_jobs : int, default=1
+        The number of jobs to run in parallel for both `fit` and `predict`.
+        ``-1`` means using all processors.   
     random_state: int or None, default=None
         Seed for random, integer
 
@@ -80,16 +54,11 @@ class WEASEL_V2(BaseClassifier):
 
     References
     ----------
-    .. [1] Patrick Schäfer and Ulf Leser, "Fast and Accurate Time Series Classification
-    with WEASEL", in proc ACM on Conference on Information and Knowledge Management,
-    2017, https://dl.acm.org/doi/10.1145/3132847.3132980
+    .. [1] 
 
     Notes
     -----
-    For the Java version, see
-    `TSML <https://github.com/uea-machine-learning/tsml/blob/master/src/main/java
-    /tsml/classifiers/dictionary_based/WEASEL.java>`_.
-
+    
     Examples
     --------
     >>> from sktime.classification.dictionary_based import WEASEL_V2
@@ -98,7 +67,7 @@ class WEASEL_V2(BaseClassifier):
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = WEASEL_V2(window_inc=4)
     >>> clf.fit(X_train, y_train)
-    WEASEL_STEROIDS(...)
+    WEASEL_V2(...)
     >>> y_pred = clf.predict(X_test)
     """
 
@@ -111,7 +80,6 @@ class WEASEL_V2(BaseClassifier):
         self,
         ensemble_size=150,
         min_window=4,
-        max_window=84,
         norm_options=[False],
         word_lengths=[7, 8],
         use_first_differences=[True, False],
@@ -135,7 +103,7 @@ class WEASEL_V2(BaseClassifier):
         self.random_state = random_state
 
         self.min_window = min_window
-        self.max_window = max_window
+        self.max_window = 84
         self.ensemble_size = ensemble_size
         self.max_feature_count = max_feature_count
         self.use_first_differences = use_first_differences

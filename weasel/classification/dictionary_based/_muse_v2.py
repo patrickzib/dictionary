@@ -15,7 +15,6 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
 
-# from sklearn.feature_selection import SelectPercentile, chi2
 from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
@@ -27,58 +26,19 @@ from sktime.transformations.panel.dictionary_based import SFADilation
 class MUSE_V2(BaseClassifier):
     """MUSE (MUltivariate Symbolic Extension) v2.0.
 
-    Also known as WEASLE-MUSE: implementation of multivariate version of WEASEL,
+    Also known as WEASEL+MUSE: implementation of multivariate version of WEASEL,
     referred to as just MUSE from [1].
 
     Overview: Input n series length m
-     WEASEL+MUSE is a multivariate  dictionary classifier that builds a
-     bag-of-patterns using SFA for different window lengths and learns a
-     logistic regression classifier on this bag.
+    WEASEL+MUSE is a multivariate  dictionary classifier that builds a
+    bag-of-patterns using SFA for different window lengths and learns a
+    logistic regression classifier on this bag.
 
-     There are these primary parameters:
-             alphabet_size: alphabet size
-             chi2-threshold: used for feature selection to select best words
-             anova: select best l/2 fourier coefficients other than first ones
-             bigrams: using bigrams of SFA words
-             binning_strategy: the binning strategy used to disctrtize into
-                               SFA words.
+    There are these primary parameters:
+             TODO
 
     Parameters
-    ----------
-    anova: boolean, default=True
-        If True, the Fourier coefficient selection is done via a one-way
-        ANOVA test. If False, the first Fourier coefficients are selected.
-        Only applicable if labels are given
-    variance: boolean, default = False
-            If True, the Fourier coefficient selection is done via the largest
-            variance. If False, the first Fourier coefficients are selected.
-            Only applicable if labels are given
-    bigrams: boolean, default=True
-        whether to create bigrams of SFA words
-    window_inc: int, default=2
-        WEASEL create a BoP model for each window sizes. This is the
-        increment used to determine the next window size.
-    alphabet_size : default = 4
-        Number of possible letters (values) for each word.
-    p_threshold: int, default=0.05 (disabled by default)
-        Used when feature selection is applied based on the chi-squared test.
-        This is the p-value threshold to use for chi-squared test on bag-of-words
-        (lower means more strict). 1 indicates that the test
-        should not be performed.
-    use_first_order_differences: boolean, default=True
-        If set to True will add the first order differences of each dimension
-        to the data.
-    support_probabilities: bool, default: False
-        If set to False, a RidgeClassifierCV will be trained, which has higher accuracy
-        and is faster, yet does not support predict_proba.
-        If set to True, a LogisticRegression will be trained, which does support
-        predict_proba(), yet is slower and typically less accuracy. predict_proba() is
-        needed for example in Early-Classification like TEASER.
-    feature_selection: {"chi2", "none", "random"}, default: chi2
-        Sets the feature selections strategy to be used. Chi2 reduces the number
-        of words significantly and is thus much faster (preferred). Random also reduces
-        the number significantly. None applies not feature selectiona and yields large
-        bag of words, e.g. much memory may be needed.
+    ----------    
     n_jobs : int, default=1
         The number of jobs to run in parallel for both `fit` and `predict`.
         ``-1`` means using all processors.
@@ -98,16 +58,11 @@ class MUSE_V2(BaseClassifier):
 
     References
     ----------
-    .. [1] Patrick Schäfer and Ulf Leser, "Multivariate time series classification
-        with WEASEL+MUSE", in proc 3rd ECML/PKDD Workshop on AALTD}, 2018
-        https://arxiv.org/abs/1711.11343
+    .. [1] 
 
     Notes
     -----
-    For the Java version, see
-    `MUSE <https://github.com/uea-machine-learning/tsml/blob/master/src/main/java/tsml/
-    classifiers/multivariate/WEASEL_MUSE.java>`_.
-
+    
     Examples
     --------
     >>> from sktime.classification.dictionary_based import MUSE
@@ -116,7 +71,7 @@ class MUSE_V2(BaseClassifier):
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = MUSE_V2(window_inc=4, use_first_order_differences=False)
     >>> clf.fit(X_train, y_train)
-    MUSE_STEROIDS(...)
+    MUSE_V2(...)
     >>> y_pred = clf.predict(X_test)
     """
 
@@ -129,29 +84,23 @@ class MUSE_V2(BaseClassifier):
 
     def __init__(
         self,
-        anova=False,
-        variance=True,
-        bigrams=False,
-        binning_strategies=["equi-depth"],
         ensemble_size=60,
         max_feature_count=20_000,
         min_window=4,
         max_window=24,
+        binning_strategies=["equi-depth"],        
         norm_options=[False],
         word_lengths=[8],
-        alphabet_sizes=[2],
         use_first_differences=True,
         feature_selection="chi2",
-        support_probabilities=False,
-        n_jobs=1,
         random_state=None,
+        n_jobs=1,
     ):
 
-        self.alphabet_sizes = alphabet_sizes
+        self.alphabet_sizes = [2]
 
-        # feature selection is applied based on the chi-squared test.
-        self.anova = anova
-        self.variance = variance
+        self.anova = False
+        self.variance = True
         self.use_first_differences = use_first_differences
 
         self.norm_options = norm_options
@@ -163,7 +112,7 @@ class MUSE_V2(BaseClassifier):
         self.feature_selection = feature_selection
         self.binning_strategies = binning_strategies
 
-        self.bigrams = bigrams
+        self.bigrams = False
         self.random_state = random_state
 
         self.window_sizes = []
@@ -171,7 +120,6 @@ class MUSE_V2(BaseClassifier):
         self.clf = None
 
         self.n_jobs = n_jobs
-        self.support_probabilities = support_probabilities
         self.total_features_count = 0
         self.feature_selection = feature_selection
 
@@ -223,7 +171,6 @@ class MUSE_V2(BaseClassifier):
                 f"all with very short series"
             )
 
-        # window_inc = max((self.max_window - self.min_window) // 50, 1)
         self.window_sizes = np.arange(self.min_window, self.max_window + 1, 1)
 
         parallel_res = Parallel(n_jobs=self.n_jobs, backend="threading")(
@@ -264,26 +211,14 @@ class MUSE_V2(BaseClassifier):
         else:
             all_words = hstack((all_words))
 
-        # Ridge Classifier does not give probabilities
-        if not self.support_probabilities:
-            self.clf = make_pipeline(
-                # SelectPercentile(chi2, percentile=10),
-                RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)),  # , normalize=True
-            )  # TODO testen??
-
-        else:
-            self.clf = LogisticRegression(
-                max_iter=5000,
-                solver="liblinear",
-                dual=True,
-                # class_weight="balanced",
-                penalty="l2",
-                random_state=self.random_state,
-                n_jobs=self.n_jobs,
-            )
+        self.clf = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)
 
         self.clf.fit(all_words, y)
         self.total_features_count = all_words.shape[-1]
+
+        if hasattr(self.clf, "best_score_"):
+            self.cross_val_score = self.clf.best_score_
+
         return self
 
     def _predict(self, X) -> np.ndarray:
@@ -316,13 +251,13 @@ class MUSE_V2(BaseClassifier):
             Predicted probabilities using the ordering in classes_.
         """
         bag = self._transform_words(X)
-        if self.support_probabilities:
-            return self.clf.predict_proba(bag)
+        scores = self.clf.decision_function(bag)
+        if len(scores.shape) == 1:
+            indices = (scores > 0).astype(np.int)
         else:
-            raise ValueError(
-                "Error in MUSE, please set support_probabilities=True, to"
-                + "allow for probabilities to be computed."
-            )
+            indices = scores.argmax(axis=1)
+        return self.classes_[indices]
+
 
     def _transform_words(self, X):
         if self.use_first_differences:
@@ -372,12 +307,7 @@ class MUSE_V2(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        return {
-            "window_inc": 4,
-            "use_first_order_differences": False,
-            "support_probabilities": True,
-            "bigrams": False,
-        }
+        return {}
 
 
 def _parallel_transform_words(X, SFA_transformers):
