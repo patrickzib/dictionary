@@ -23,7 +23,7 @@ def setup_package():
         description=pyproject["project"]["description"],
         # download_url=pyproject["project"]["urls"]["download"],
         include_package_data=True,
-        install_requires=pyproject["project"]["dependencies"],
+        # install_requires=pyproject["project"]["dependencies"],
         keywords=pyproject["project"]["keywords"],
         license=pyproject["project"]["license"],
         long_description=long_description(),
