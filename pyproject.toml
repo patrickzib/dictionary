@@ -1,18 +1,18 @@
 [project]
 name = "weasel"
 
-version = "0.1"
+version = "0.1.0"
 
-description = "WEASEL 2.0 - A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory Time Series Classification"
+description = "A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory Time Series Classification"
 readme = "README.md"
 authors = [
-    {name = "patrickzib"}
+    {name = "patrickzib", email = "void@void.com"}
 ]
 keywords = [
-    "machine learning",
-    "time series",    
+    "machine-learning",
+    "time-series",    
     "dictionary",
-    "time series classification",
+    "classification",
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -32,7 +32,7 @@ classifiers = [
 ]
 requires-python = ">=3.7,<3.11"
 dependencies = [
-    "sktime >= 0.13,<=0.15",
+    "sktime>=0.13,<=0.15",
     "numba>=0.55",
     "numpy>=1.21.0,<1.25",
     "pandas>=1.1.0,<1.6.0",
@@ -43,6 +43,8 @@ dependencies = [
 
 [project.urls]
 repository = "https://github.com/patrickzib/dictionary"
+#documentation = ""
+#download = ""
 
 [project.license]
 file = "LICENSE"
