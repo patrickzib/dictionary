@@ -25,7 +25,7 @@ pip install .
 
 WEASEL v2 follows the sktime pipeline.
 
-```
+```python
 from sktime.datasets import load_arrow_head
 from weasel.classification.dictionary_based import WEASEL_V2
 
