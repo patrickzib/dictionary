@@ -3,19 +3,13 @@
 WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-parameter ensembling to obtain a fast, accurate, and constrained memory TSC. WEASEL 2.0 is significantly more accurate than its predecessor dictionary methods (BOSS, TDE, WEASEL), and in the same group as SotA non-ensemble methods. 
 
 ### Accuracy against dictionary classifiers
-<p float="center">
-  <img src="https://github.com/patrickzib/dictionary/blob/main/images/UCR_accuracy_subset.png" width="100%" />
-</p>
+![UCR_accuracy_subset](https://user-images.githubusercontent.com/7783034/210091877-5e3c631b-6b81-4475-9655-7a08f6b59f76.png)
 
 ### Accuracy against SotA classifiers
-<p float="center">
-  <img src="https://github.com/patrickzib/dictionary/blob/main/images/UCR_accuracy.png" width="100%" />
-</p>
+![UCR_accuracy](https://user-images.githubusercontent.com/7783034/210091886-8c3ffc38-ef4e-46ca-a8d3-40f4fb5059e8.png)
 
 ### Runtime against SotA classifiers
-<p float="center">
-  <img src="https://github.com/patrickzib/dictionary/blob/main/images/UCR_runtime.png" width="100%" />
-</p>
+![UCR_runtime](https://user-images.githubusercontent.com/7783034/210091904-7e2d7074-a5c9-4dcd-b6cf-1f2b9fdba15b.png)
 
 
 ## Installation
