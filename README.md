@@ -4,17 +4,17 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 
 ### Accuracy against dictionary classifiers
 <p float="center">
-  <img src="images/UCR_accuracy_subset.png" width="100%" />
+  <img src="https://github.com/patrickzib/dictionary/blob/main/images/images/UCR_accuracy_subset.png" width="100%" />
 </p>
 
 ### Accuracy against SotA classifiers
 <p float="center">
-  <img src="images/UCR_accuracy.png" width="100%" />
+  <img src="https://github.com/patrickzib/dictionary/blob/main/images/images/UCR_accuracy.png" width="100%" />
 </p>
 
 ### Runtime against SotA classifiers
 <p float="center">
-  <img src="images/UCR_runtime.png" width="100%" />
+  <img src="https://github.com/patrickzib/dictionary/blob/main/images/images/UCR_runtime.png" width="100%" />
 </p>
 
 

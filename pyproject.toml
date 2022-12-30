@@ -1,7 +1,7 @@
 [project]
 name = "weasel"
 
-version = "0.1.0"
+version = "0.1.1"
 
 description = "A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory Time Series Classification"
 readme = "README.md"
