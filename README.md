@@ -19,7 +19,7 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 sktime >= 0.13,<=0.15
 ```
 
-### Building
+### Build from Source
 
 First, download the repository.
 ```
