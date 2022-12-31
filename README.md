@@ -26,7 +26,7 @@ First, download the repository.
 git clone https://github.com/patrickzib/dictionary.git
 ```
 
-Then build package from source.
+Change into the directory and build the package from source.
 ```
 pip install .
 ```
