@@ -19,14 +19,14 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 sktime >= 0.13,<=0.15
 ```
 
-### Building
+### Build from Source
 
 First, download the repository.
 ```
 git clone https://github.com/patrickzib/dictionary.git
 ```
 
-Then build package from source.
+Change into the directory and build the package from source.
 ```
 pip install .
 ```
