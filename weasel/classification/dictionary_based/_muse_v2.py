@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """WEASEL+MUSE classifier.
 
-multivariate dictionary based classifier based on SFA transform, dictionaries
-and logistic regression.
+A Random Dilated Multivariate Dictionary Transform for Fast, Accurate and
+Constrained Memory Time Series Classification.
+
 """
 
 __author__ = ["patrickzib"]
@@ -14,31 +15,49 @@ import warnings
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
-
-from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
-from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import RidgeClassifierCV
 from sklearn.utils import check_random_state
-
 from sktime.classification.base import BaseClassifier
+
 from weasel.transformations.panel.dictionary_based import SFADilation
 
 
 class MUSE_V2(BaseClassifier):
     """MUSE (MUltivariate Symbolic Extension) v2.0.
 
-    Also known as WEASEL+MUSE: implementation of multivariate version of WEASEL,
-    referred to as just MUSE from [1].
-
-    Overview: Input n series length m
-    WEASEL+MUSE is a multivariate  dictionary classifier that builds a
-    bag-of-patterns using SFA for different window lengths and learns a
-    logistic regression classifier on this bag.
-
-    There are these primary parameters:
-             TODO
+    This is a MUSE+dilation implementation in a very early state.
 
     Parameters
-    ----------    
+    ----------
+    ensemble_size : int, default=60
+        Generates `ensemble_size` many random configurations to generate words.
+    max_feature_count : int, default=30_000
+       size of the dictionary - number of words to use - if feature_selection set to
+       "chi2" or "random". Else ignored.
+    min_window : int , default=4,
+        Minimal window size to chose from. A random value is chosen per config.
+    max_window : int, default=24,
+        Maxmimal window size to chose from. A random value is chosen per config.
+    binning_method : {"equi-depth", "equi-width", "information-gain", "kmeans",
+                     "quantile"}, default=["equi-depth"]
+        the binning method(s) used to derive the breakpoints. A random value is
+        chosen per config.
+    norm_options : array of bool, default=[False],
+        If the array contains True, words are computed over mean-normed TS
+        If the array contains False, words are computed over raw TS
+        If both are set, words are computed for both.
+        A value will be randomly chosen for each parameter-configuration.
+    word_lengths : array of int, default=[7, 8],
+        Length of the words to compute. A value will be randomly chosen for each
+        parameter-configuration.
+    use_first_differences: bool, default=True,
+        If the array contains True, words are computed over first order differences
+        and the raw time seris. If set to False, only the raw time series is used.
+    feature_selection: {"chi2", "none", "random"}, default=chi2
+        Sets the feature selections strategy to be used. Chi2 reduces the number
+        of words significantly and is thus much faster (preferred). Random also
+        reduces the number significantly. None applies not feature selectiona and
+        yields large bag of words, e.g. much memory may be needed.
     n_jobs : int, default=1
         The number of jobs to run in parallel for both `fit` and `predict`.
         ``-1`` means using all processors.
@@ -65,7 +84,7 @@ class MUSE_V2(BaseClassifier):
     
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import MUSE
+    >>> from weasel.classification.dictionary_based import MUSE_V2
     >>> from sktime.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
@@ -83,18 +102,18 @@ class MUSE_V2(BaseClassifier):
     }
 
     def __init__(
-        self,
-        ensemble_size=60,
-        max_feature_count=20_000,
-        min_window=4,
-        max_window=24,
-        binning_strategies=["equi-depth"],        
-        norm_options=[False],
-        word_lengths=[8],
-        use_first_differences=True,
-        feature_selection="chi2",
-        random_state=None,
-        n_jobs=1,
+            self,
+            ensemble_size=60,
+            max_feature_count=20_000,
+            min_window=4,
+            max_window=24,
+            binning_strategies=["equi-depth"],
+            norm_options=[False],
+            word_lengths=[8],
+            use_first_differences=True,
+            feature_selection="chi2",
+            random_state=None,
+            n_jobs=1,
     ):
 
         self.alphabet_sizes = [2]
@@ -200,8 +219,8 @@ class MUSE_V2(BaseClassifier):
         self.SFA_transformers = []
         all_words = []
         for (
-            sfa_words,
-            transformer,
+                sfa_words,
+                transformer,
         ) in parallel_res:
             self.SFA_transformers.append(transformer)  # Append! Not Extent! 2d Array
             all_words.extend(sfa_words)
@@ -258,7 +277,6 @@ class MUSE_V2(BaseClassifier):
             indices = scores.argmax(axis=1)
         return self.classes_[indices]
 
-
     def _transform_words(self, X):
         if self.use_first_differences:
             X = self._add_first_order_differences(X)
@@ -280,9 +298,9 @@ class MUSE_V2(BaseClassifier):
 
     def _add_first_order_differences(self, X):
         X_new = np.zeros((X.shape[0], X.shape[1] * 2, X.shape[2]))
-        X_new[:, 0 : X.shape[1], :] = X
+        X_new[:, 0: X.shape[1], :] = X
         diff = np.diff(X, 1)
-        X_new[:, X.shape[1] :, : diff.shape[2]] = diff
+        X_new[:, X.shape[1]:, : diff.shape[2]] = diff
         return X_new
 
     @classmethod
@@ -322,23 +340,23 @@ def _parallel_transform_words(X, SFA_transformers):
 
 
 def _parallel_fit(
-    ind,
-    X,
-    y,
-    window_sizes,
-    alphabet_sizes,
-    word_lengths,
-    norm_options,
-    use_first_differences,
-    binning_strategies,
-    variance,
-    anova,
-    bigrams,
-    n_jobs,
-    max_feature_count,
-    ensemble_size,
-    feature_selection,
-    random_state,
+        ind,
+        X,
+        y,
+        window_sizes,
+        alphabet_sizes,
+        word_lengths,
+        norm_options,
+        use_first_differences,
+        binning_strategies,
+        variance,
+        anova,
+        bigrams,
+        n_jobs,
+        max_feature_count,
+        ensemble_size,
+        feature_selection,
+        random_state,
 ):
     if random_state is not None:
         rng = check_random_state(random_state + ind)

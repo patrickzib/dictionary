@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """WEASEL 2.0
 
-Dictionary based classifier based on SFA transform, BOSS and linear regression.
+A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory
+Time Series Classification.
 
 """
 
@@ -11,12 +12,10 @@ __all__ = ["WEASEL_V2"]
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
-
 from sklearn.linear_model import RidgeClassifierCV
-
 from sklearn.utils import check_random_state
-
 from sktime.classification.base import BaseClassifier
+
 from weasel.transformations.panel.dictionary_based import SFADilation
 
 
@@ -28,14 +27,43 @@ class WEASEL_V2(BaseClassifier):
     for different window lengths and learns a logistic regression classifier
     on this bag.
 
-    There are these primary parameters:
-            TODO
-    
+    WEASEL 2.0 has three key parameters that are automcatically set based on the
+    length of the time series:
+    (1) Minimal window length: Typically defaulted to 4
+    (2) Maximal window length: Typically chosen from
+        24, 44 or 84 depending on the time series length.
+    (3) Ensemble size: Typically chosen from 50, 100, 150, to derive
+        a feature vector of roughly 20𝑘 up to 70𝑘 features (distinct words).
 
+    From the other parameters passed, WEASEL chosen random values for each set
+    of configurations. E.g. for each of 150 configurations, a random value is chosen
+    from the below options.
 
     Parameters
     ----------
-    n_jobs : int, default=1
+    min_window : int, default=4,
+        Minimal length of the subsequences to compute words from.
+    norm_options : array of bool, default=[False],
+        If the array contains True, words are computed over mean-normed TS
+        If the array contains False, words are computed over raw TS
+        If both are set, words are computed for both.
+        A value will be randomly chosen for each parameter-configuration.
+    word_lengths : array of int, default=[7, 8],
+        Length of the words to compute. A value will be randomly chosen for each
+        parameter-configuration.
+    use_first_differences: array of bool, default=[True, False],
+        If the array contains True, words are computed over first order differences.
+        If the array contains False, words are computed over the raw time series.
+        If both are set, words are computed for both.
+    feature_selection: {"chi2", "none", "random"}, default=chi2
+        Sets the feature selections strategy to be used. Chi2 reduces the number
+        of words significantly and is thus much faster (preferred). Random also
+        reduces the number significantly. None applies not feature selectiona and
+        yields large bag of words, e.g. much memory may be needed.
+    max_feature_count : int, default=30_000
+       size of the dictionary - number of words to use - if feature_selection set to
+       "chi2" or "random". Else ignored.
+    n_jobs : int, default=4
         The number of jobs to run in parallel for both `fit` and `predict`.
         ``-1`` means using all processors.   
     random_state: int or None, default=None
@@ -61,7 +89,7 @@ class WEASEL_V2(BaseClassifier):
     
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import WEASEL_V2
+    >>> from weasel.classification.dictionary_based import WEASEL_V2
     >>> from sktime.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
@@ -77,16 +105,15 @@ class WEASEL_V2(BaseClassifier):
     }
 
     def __init__(
-        self,
-        ensemble_size=150,
-        min_window=4,
-        norm_options=[False],
-        word_lengths=[7, 8],
-        use_first_differences=[True, False],
-        feature_selection="none",
-        max_feature_count=30_000,
-        random_state=None,
-        n_jobs=4,
+            self,
+            min_window=4,
+            norm_options=[False],
+            word_lengths=[7, 8],
+            use_first_differences=[True, False],
+            feature_selection="none",
+            max_feature_count=30_000,
+            random_state=None,
+            n_jobs=4,
     ):
         self.alphabet_sizes = [2]
         self.binning_strategies = ["equi-depth", "equi-width"]
@@ -104,7 +131,7 @@ class WEASEL_V2(BaseClassifier):
 
         self.min_window = min_window
         self.max_window = 84
-        self.ensemble_size = ensemble_size
+        self.ensemble_size = 150
         self.max_feature_count = max_feature_count
         self.use_first_differences = use_first_differences
         self.feature_selection = feature_selection
@@ -303,27 +330,27 @@ class WEASEL_V2(BaseClassifier):
 
 
 def _parallel_fit(
-    i,
-    X,
-    y,
-    window_sizes,
-    alphabet_sizes,
-    word_lengths,
-    series_length,
-    norm_options,
-    use_first_differences,
-    binning_strategies,
-    variance,
-    anova,
-    bigrams,
-    lower_bounding,
-    n_jobs,
-    max_feature_count,
-    ensemble_size,
-    feature_selection,
-    remove_repeat_words,
-    sections,
-    random_state,
+        i,
+        X,
+        y,
+        window_sizes,
+        alphabet_sizes,
+        word_lengths,
+        series_length,
+        norm_options,
+        use_first_differences,
+        binning_strategies,
+        variance,
+        anova,
+        bigrams,
+        lower_bounding,
+        n_jobs,
+        max_feature_count,
+        ensemble_size,
+        feature_selection,
+        remove_repeat_words,
+        sections,
+        random_state,
 ):
     if random_state is None:
         rng = check_random_state(None)
@@ -376,25 +403,25 @@ def _parallel_fit(
 
 
 def getSFADilated(
-    alphabet_size,
-    alphabet_sizes,
-    anova,
-    bigrams,
-    binning_strategy,
-    dilation,
-    ensemble_size,
-    feature_selection,
-    first_difference,
-    i,
-    lower_bounding,
-    max_feature_count,
-    n_jobs,
-    norm,
-    remove_repeat_words,
-    sections,
-    variance,
-    window_size,
-    word_length,
+        alphabet_size,
+        alphabet_sizes,
+        anova,
+        bigrams,
+        binning_strategy,
+        dilation,
+        ensemble_size,
+        feature_selection,
+        first_difference,
+        i,
+        lower_bounding,
+        max_feature_count,
+        n_jobs,
+        norm,
+        remove_repeat_words,
+        sections,
+        variance,
+        window_size,
+        word_length,
 ):
     transformer = SFADilation(
         variance=variance,
