@@ -46,3 +46,16 @@ clf = WEASEL_V2(random_state=1379, n_jobs=4)
 clf.fit(X_train,y_train)
 clf.predict(X_test)
 ```
+
+## Citing
+
+If you use this algorithm or publication, please cite (ArXiv: [https://arxiv.org/abs/2109.13514](https://arxiv.org/abs/2301.10194)):
+
+```bibtex
+@article{schaefer2023weasel2,
+  author = {Schäfer, Patrick and Leser, Ulf},
+  title = {{WEASEL 2.0 -- A Random Dilated Dictionary Transform for Fast, Accurate and Memory Constrained Time Series Classification}},
+  journal={arXiv preprint arXiv:2301.10194},
+  year = {2023},
+}
+```
