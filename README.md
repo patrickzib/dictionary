@@ -2,7 +2,7 @@
 
 WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-parameter ensembling to obtain a fast, accurate, and constrained memory TSC. WEASEL 2.0 is significantly more accurate than its predecessor dictionary methods (BOSS, TDE, WEASEL), and in the same group as SotA non-ensemble methods. 
 
- ArXiv-Paper: https://arxiv.org/abs/2109.13514
+ ArXiv-Paper: https://arxiv.org/abs/2301.10194
  
  
 ### Accuracy against dictionary classifiers
@@ -52,7 +52,7 @@ clf.predict(X_test)
 
 ## Citing
 
-If you use this algorithm or publication, please cite (ArXiv: [https://arxiv.org/abs/2109.13514](https://arxiv.org/abs/2301.10194)):
+If you use this algorithm or publication, please cite (ArXiv: https://arxiv.org/abs/2301.10194):
 
 ```bibtex
 @article{schaefer2023weasel2,
