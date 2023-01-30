@@ -22,7 +22,18 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 sktime >= 0.13,<=0.15
 ```
 
-### Build from Source
+# Installation
+
+The easiest is to use pip to install weasel-classifier.
+
+## a) Install using pip
+```
+pip install weasel-classifier
+```
+
+You can also install  the project from source.
+
+## b) Build from Source
 
 First, download the repository.
 ```
