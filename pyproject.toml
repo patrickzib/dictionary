@@ -1,7 +1,7 @@
 [project]
-name = "weasel"
+name = "weasel-classifier"
 
-version = "0.1.2.2"
+version = "0.1.3"
 
 description = "A Random Dilated Dictionary Transform for Fast, Accurate and Constrained Memory Time Series Classification"
 readme = "README.md"
