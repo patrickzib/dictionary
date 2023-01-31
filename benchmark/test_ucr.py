@@ -192,29 +192,17 @@ def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
         # "WEASEL 2.0 - top-k": WEASEL_V2(
-        #     random_state=1379,
-        #     feature_selection="chi2_top_k",
-        #     n_jobs=threads_to_use
+        #    random_state=1379,
+        #    feature_selection="chi2_top_k",
+        #    n_jobs=threads_to_use
         # ),
-        # "WEASEL 2.0 - none": WEASEL_V2(
-        #     random_state=1379,
-        #     n_jobs=threads_to_use
-        # ),
-        "WEASEL a4": WEASEL(
+        "WEASEL 2.0": WEASEL_V2(
             random_state=1379,
-            n_jobs=threads_to_use,
-            alphabet_size=4
+            n_jobs=threads_to_use
         ),
-        "WEASEL a2": WEASEL(
+        "WEASEL": WEASEL(
             random_state=1379,
             n_jobs=threads_to_use,
-            alphabet_size = 2
-        ),
-        "WEASEL a2, none": WEASEL(
-            random_state=1379,
-            n_jobs=threads_to_use,
-            alphabet_size=2,
-            feature_selection="none"
         ),
     }
     return clfs
