@@ -1188,7 +1188,7 @@ def create_bag_transform(
             section_count = np.zeros(
                 (sfa_words.shape[0], feature_count // 2, sections), dtype=np.uint32
             )
-            max_index = max(X_indxex) + 1
+            max_index = max(X_index) + 1
             for j in range(sfa_words.shape[0]):
                 for i in range(sfa_words.shape[1]):
                     section_count[
