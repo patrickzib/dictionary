@@ -76,10 +76,13 @@ class SFADilation(BaseTransformer):
             ANOVA test. If False, the first Fourier coefficients are selected.
             Only applicable if labels are given
 
-        variance:               boolean, default = False
+        variance:            boolean, default = False
             If True, the Fourier coefficient selection is done via the largest
             variance. If False, the first Fourier coefficients are selected.
             Only applicable if labels are given
+
+        dilation:            int, default = 0
+            When set to dilation > 1, adds dilation to the sliding window operation.
 
         save_words:          boolean, default = False
             whether to save the words generated for each series (default False)
