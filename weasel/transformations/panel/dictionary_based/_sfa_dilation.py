@@ -275,10 +275,10 @@ class SFADilation(BaseTransformer):
         X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
-        # if self.dilation > 1 or self.first_difference:
-        X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
-        # else:
-        #    X2, self.X_index = X, np.arange(X.shape[-1])
+        if self.dilation >= 1 or self.first_difference:
+            X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        else:
+            X2, self.X_index = X, np.arange(X.shape[-1])
 
         self.n_instances, self.series_length = X2.shape
         self.breakpoints = self._binning(X2, y)
@@ -380,10 +380,10 @@ class SFADilation(BaseTransformer):
         X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
-        # if self.dilation >= 1 or self.first_difference:
-        X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
-        # else:
-        #    X2, self.X_index = X, np.arange(X.shape[-1])
+        if self.dilation >= 1 or self.first_difference:
+            X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        else:
+            X2, self.X_index = X, np.arange(X.shape[-1])
 
         words, dfts = _transform_case(
             X2,
