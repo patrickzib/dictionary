@@ -200,10 +200,10 @@ def get_classifiers(threads_to_use):
             random_state=1379,
             n_jobs=threads_to_use
         ),
-        # "WEASEL": WEASEL(
-        #     random_state=1379,
-        #     n_jobs=threads_to_use
-        # ),
+        "WEASEL": WEASEL(
+            random_state=1379,
+            n_jobs=threads_to_use
+        ),
     }
     return clfs
 
