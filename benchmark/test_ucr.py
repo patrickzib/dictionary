@@ -8,6 +8,7 @@ import itertools
 import sys
 
 sys.path.insert(0, "./")
+sys.path.insert(0, "./../")
 
 import time
 from warnings import simplefilter
