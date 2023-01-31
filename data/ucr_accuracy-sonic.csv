@@ -1794,6 +1794,7 @@ WEASEL (dilation),TwoPatterns,0.9975
 WEASEL (dilation),UMD,0.9861111111111112
 WEASEL (dilation),UWaveGestureLibraryAll,0.9592406476828588
 WEASEL (dilation),UWaveGestureLibraryX,0.844500279173646
+WEASEL (dilation),UWaveGestureLibraryZ,0.787
 WEASEL (dilation),UWaveGestureLibraryY,0.7674483528754885
 WEASEL (dilation),Wafer,0.9995133030499675
 WEASEL (dilation),Wine,0.9074074074074074

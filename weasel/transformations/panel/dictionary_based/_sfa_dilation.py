@@ -758,7 +758,7 @@ def _fast_fourier_transform(X, norm, dft_length, inverse_sqrt_win_size):
     for i in range(len(stds)):
         stds[i] = np.std(X[i])
     # stds = np.std(X, axis=1)  # not available in numba
-    stds = np.where(stds < 1e-8, 1e-8, stds)  # TODO 1 or 1e-8?
+    stds = np.where(stds < 1e-8, 1, stds)
 
     with objmode(X_ffts="complex128[:,:]"):
         X_ffts = np.fft.rfft(X, axis=1)  # complex128
@@ -842,7 +842,7 @@ def _calc_incremental_mean_std(series, end, window_size):
     r_window_length = 1.0 / window_size
     mean = series_sum * r_window_length
     buf = math.sqrt(max(square_sum * r_window_length - mean * mean, 0.0))
-    stds[0] = buf if buf > 1e-8 else 1e-8  # TODO 1 or 1e-8?
+    stds[0] = buf if buf > 1e-8 else 1
 
     for w in range(1, end):
         series_sum += series[w + window_size - 1] - series[w - 1]
@@ -852,7 +852,7 @@ def _calc_incremental_mean_std(series, end, window_size):
             - series[w - 1] * series[w - 1]
         )
         buf = math.sqrt(max(square_sum * r_window_length - mean * mean, 0.0))
-        stds[w] = buf if buf > 1e-8 else 1e-8  # TODO 1 or 1e-8?
+        stds[w] = buf if buf > 1e-8 else 1
 
     return stds
 
@@ -1001,14 +1001,13 @@ def _mft(
 
 
 def _dilation(X, d, first_difference):
-    # if d > 1:  # TODO test on full DS?
-    padding = np.zeros((len(X), 10))
-    X = np.concatenate((padding, X, padding), axis=1)
+    if d > 1 or first_difference:  # TODO test on full DS?
+        padding = np.zeros((len(X), 10))
+        X = np.concatenate((padding, X, padding), axis=1)
 
-    # adding first order differences
+    # using only first order differences
     if first_difference:
         X = np.diff(X, axis=1, prepend=0)
-        # X = np.concatenate((X, X2), axis=1)
 
     # adding dilation
     if d > 1:
