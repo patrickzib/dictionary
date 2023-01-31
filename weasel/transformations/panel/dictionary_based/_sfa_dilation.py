@@ -168,7 +168,7 @@ class SFADilation(BaseTransformer):
         remove_repeat_words=False,
         lower_bounding=True,
         save_words=False,
-        dilation=1,
+        dilation=0,
         first_difference=False,
         feature_selection="none",
         sections=1,
