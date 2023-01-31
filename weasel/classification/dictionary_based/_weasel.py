@@ -69,7 +69,7 @@ class WEASEL(BaseClassifier):
         This is the p-value threshold to use for chi-squared test on bag-of-words
         (lower means more strict). 1 indicates that the test
         should not be performed.
-    alphabet_size : default = 2
+    alphabet_size : default = 4
         Number of possible letters (values) for each word.
     feature_selection: {"chi2", "none", "random"}, default: chi2
         Sets the feature selections strategy to be used. Large amounts of memory may be
