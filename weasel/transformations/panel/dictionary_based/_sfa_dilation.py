@@ -1001,9 +1001,9 @@ def _mft(
 
 
 def _dilation(X, d, first_difference):
-    if d > 1:
-        padding = np.zeros((len(X), 10))
-        X = np.concatenate((padding, X, padding), axis=1)
+    # if d > 1:  # TODO test on full DS?
+    padding = np.zeros((len(X), 10))
+    X = np.concatenate((padding, X, padding), axis=1)
 
     # adding first order differences
     if first_difference:
