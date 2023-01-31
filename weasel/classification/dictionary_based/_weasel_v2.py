@@ -55,11 +55,15 @@ class WEASEL_V2(BaseClassifier):
         If the array contains True, words are computed over first order differences.
         If the array contains False, words are computed over the raw time series.
         If both are set, words are computed for both.
-    feature_selection: {"chi2", "none", "random"}, default=chi2
-        Sets the feature selections strategy to be used. Chi2 reduces the number
-        of words significantly and is thus much faster (preferred). Random also
-        reduces the number significantly. None applies not feature selectiona and
-        yields large bag of words, e.g. much memory may be needed.
+    feature_selection: {"chi2_top_k", "none", "random"}, default: none
+        Sets the feature selections strategy to be used. Large amounts of memory may be
+        needed depending on the setting of bigrams (true is more) or
+        alpha (larger is more).
+        'chi2_top_k' reduces the number of words to at most 'max_feature_count',
+        dropping values based on p-value.
+        'random' reduces the number to at most 'max_feature_count',
+        by randomly selecting features.
+        'none' does not apply any feature selection and yields large bag of words
     max_feature_count : int, default=30_000
        size of the dictionary - number of words to use - if feature_selection set to
        "chi2" or "random". Else ignored.
@@ -303,30 +307,6 @@ class WEASEL_V2(BaseClassifier):
             all_words = hstack(all_words)
 
         return all_words
-
-    @classmethod
-    def get_test_params(cls, parameter_set="default"):
-        """Return testing parameter settings for the estimator.
-
-        Parameters
-        ----------
-        parameter_set : str, default="default"
-            Name of the set of test parameters to return, for use in tests. If no
-            special parameters are defined for a value, will return `"default"` set.
-            For classifiers, a "default" set of parameters should be provided for
-            general testing, and a "results_comparison" set for comparing against
-            previously recorded results if the general set does not produce suitable
-            probabilities to compare against.
-
-        Returns
-        -------
-        params : dict or list of dict, default={}
-            Parameters to create testing instances of the class.
-            Each dict are parameters to construct an "interesting" test instance, i.e.,
-            `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
-            `create_test_instance` uses the first (or only) dictionary in `params`.
-        """
-        return {}
 
 
 def _parallel_fit(

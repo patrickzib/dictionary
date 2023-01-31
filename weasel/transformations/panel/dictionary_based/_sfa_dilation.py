@@ -85,13 +85,18 @@ class SFADilation(BaseTransformer):
             whether to save the words generated for each series (default False)
 
         bigrams:             boolean, default = False
-            whether to create bigrams of SFA words
+            whether to create bigrams of SFA words.
 
-        feature_selection: {"chi2", "none", "random"}, default: chi2
-            Sets the feature selections strategy to be used. Chi2 reduces the number
-            of words significantly and is thus much faster (preferred). Random also
-            reduces the number significantly. None applies not feature selectiona and
-            yields large bag of words, e.g. much memory may be needed.
+        feature_selection: {"chi2", "chi2_top_k", "none", "random"}, default: none
+            Sets the feature selections strategy to be used. Large amounts of memory
+            may be needed depending on the setting of bigrams (true is more) or
+            alpha (larger is more).
+            'chi2' reduces the number of words, keeping those above the 'p_threshold'.
+            'chi2_top_k' reduces the number of words to at most 'max_feature_count',
+            dropping values based on p-value.
+            'random' reduces the number to at most 'max_feature_count',
+            by randomly selecting features.
+            'none' does not apply any feature selection and yields large bag of words,
 
         p_threshold:  int, default=0.05 (disabled by default)
             If feature_selection=chi2 is chosen, feature selection is applied based on
@@ -246,7 +251,7 @@ class SFADilation(BaseTransformer):
 
         if self.variance and self.anova:
             raise ValueError(
-                "Please set either variance or anova Fourier coefficient" " selection"
+                "Please set either variance or anova Fourier coefficient selection"
             )
 
         if self.binning_method not in binning_methods:
@@ -270,7 +275,11 @@ class SFADilation(BaseTransformer):
         X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
-        X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        if self.dilation > 1 or self.first_difference:
+            X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        else:
+            X2, self.X_index = X, np.arange(X.shape[-1])
+
         self.n_instances, self.series_length = X2.shape
         self.breakpoints = self._binning(X2, y)
         self._is_fitted = True
@@ -371,7 +380,11 @@ class SFADilation(BaseTransformer):
         X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
-        X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        if self.dilation > 1 or self.first_difference:
+            X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
+        else:
+            X2, self.X_index = X, np.arange(X.shape[-1])
+
         words, dfts = _transform_case(
             X2,
             self.window_size,
@@ -474,8 +487,11 @@ class SFADilation(BaseTransformer):
                     self.sections,
                 )
 
-            # Chi-squared feature selection
-            elif self.feature_selection == "chi2":
+            # Chi-squared feature selection taking
+            # a) the top-k features
+            # b) a p-threshold
+            elif self.feature_selection == "chi2_top_k" \
+                 or self.feature_selection == "chi2":
                 feature_names_array = np.array(list(feature_names))
                 feature_count = len(feature_names_array)
                 relevant_features_idx = np.arange(feature_count, dtype=np.uint32)
@@ -489,24 +505,23 @@ class SFADilation(BaseTransformer):
                     self.sections,
                 )
 
+                # apply chi2-based feature selection
                 chi2_statistics, p = chi2(bag_of_words, y)
-                relevant_features_idx = np.argsort(p)[: self.max_feature_count]
-                # relevant_features_idx = np.where(p <= self.p_threshold)[0]
 
+                # p-threshold using 'p_threshold'
+                if self.feature_selection == "chi2":
+                    relevant_features_idx = np.where(p <= self.p_threshold)[0]
+
+                # top-k using 'max_feature_count'
+                else:
+                    relevant_features_idx = np.argsort(p)[: self.max_feature_count]
+
+                self.relevant_features = create_dict(
+                    feature_names_array[relevant_features_idx],
+                    np.arange(len(relevant_features_idx), dtype=np.uint32),
+                )
                 # select subset of features
                 bag_of_words = bag_of_words[:, relevant_features_idx]
-
-                relevant_features_idx = relevant_features_idx[
-                    relevant_features_idx < len(feature_names_array)
-                ]
-                self.relevant_features = Dict.empty(
-                    key_type=types.uint32, value_type=types.uint32
-                )
-                for k, v in zip(
-                    feature_names_array[relevant_features_idx],
-                    np.arange(len(relevant_features_idx)),
-                ):
-                    self.relevant_features[k] = v
 
         self.feature_count = bag_of_words.shape[1]
 
@@ -661,35 +676,6 @@ class SFADilation(BaseTransformer):
         # retrain feature selection-strategy
         return self.transform_to_bag(new_words, new_len, y)
 
-    @classmethod
-    def get_test_params(cls, parameter_set="default"):
-        """Return testing parameter settings for the estimator.
-
-        Parameters
-        ----------
-        parameter_set : str, default="default"
-            Name of the set of test parameters to return, for use in tests. If no
-            special parameters are defined for a value, will return `"default"` set.
-
-        Returns
-        -------
-        params : dict or list of dict, default = {}
-            Parameters to create testing instances of the class
-            Each dict are parameters to construct an "interesting" test instance, i.e.,
-            `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
-            `create_test_instance` uses the first (or only) dictionary in `params`
-        """
-        # small window size for testing
-        params = {
-            "word_length": 4,
-            "window_size": 4,
-            "return_sparse": True,
-            "return_pandas_data_series": True,
-            "feature_selection": "chi2",
-            "alphabet_size": 2,
-        }
-        return params
-
     def set_fitted(self):
         """Whether `fit` has been called."""
         self._is_fitted = True
@@ -772,7 +758,7 @@ def _fast_fourier_transform(X, norm, dft_length, inverse_sqrt_win_size):
     for i in range(len(stds)):
         stds[i] = np.std(X[i])
     # stds = np.std(X, axis=1)  # not available in numba
-    stds = np.where(stds < 1e-8, 1, stds)
+    stds = np.where(stds < 1e-8, 1e-8, stds)  # TODO 1 or 1e-8?
 
     with objmode(X_ffts="complex128[:,:]"):
         X_ffts = np.fft.rfft(X, axis=1)  # complex128
@@ -856,7 +842,7 @@ def _calc_incremental_mean_std(series, end, window_size):
     r_window_length = 1.0 / window_size
     mean = series_sum * r_window_length
     buf = math.sqrt(max(square_sum * r_window_length - mean * mean, 0.0))
-    stds[0] = buf if buf > 1e-8 else 1
+    stds[0] = buf if buf > 1e-8 else 1e-8  # TODO 1 or 1e-8?
 
     for w in range(1, end):
         series_sum += series[w + window_size - 1] - series[w - 1]
@@ -866,7 +852,7 @@ def _calc_incremental_mean_std(series, end, window_size):
             - series[w - 1] * series[w - 1]
         )
         buf = math.sqrt(max(square_sum * r_window_length - mean * mean, 0.0))
-        stds[w] = buf if buf > 1e-8 else 1
+        stds[w] = buf if buf > 1e-8 else 1e-8  # TODO 1 or 1e-8?
 
     return stds
 
@@ -1015,8 +1001,9 @@ def _mft(
 
 
 def _dilation(X, d, first_difference):
-    padding = np.zeros((len(X), 10))
-    X = np.concatenate((padding, X, padding), axis=1)
+    if d > 1:
+        padding = np.zeros((len(X), 10))
+        X = np.concatenate((padding, X, padding), axis=1)
 
     # adding first order differences
     if first_difference:
@@ -1024,11 +1011,17 @@ def _dilation(X, d, first_difference):
         # X = np.concatenate((X, X2), axis=1)
 
     # adding dilation
-    X_dilated = _dilation2(X, d)
+    if d > 1:
+        X_dilated = _dilation2(X, d)
+        X_index = _dilation2(np.arange(X_dilated.shape[-1], dtype=np.float_)
+                             .reshape(1, -1), d)[0]
+    else:
+        X_dilated = X
+        X_index = np.arange(X_dilated.shape[-1])
 
     return (
         X_dilated,
-        _dilation2(np.arange(X_dilated.shape[1], dtype=np.float_).reshape(1, -1), d)[0],
+        X_index,
     )
 
 
@@ -1226,6 +1219,19 @@ def create_bag_transform(
 
     return all_win_words, all_win_words.shape[1]
 
+
+@njit(fastmath=True, cache=True)
+def create_dict(feature_names, features_idx):
+    relevant_features = Dict.empty(
+        key_type=types.uint32, value_type=types.uint32
+    )
+    for k, v in zip(
+        feature_names[features_idx],
+        np.arange(len(features_idx), dtype=np.uint32),
+    ):
+        relevant_features[k] = v
+
+    return relevant_features
 
 @njit(fastmath=True, cache=True)
 def shorten_words(words, amount, letter_bits):

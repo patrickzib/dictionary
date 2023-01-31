@@ -18,7 +18,7 @@ simplefilter(action="ignore", category=UserWarning)
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from weasel.classification.dictionary_based import WEASEL_V2
+from weasel.classification.dictionary_based import WEASEL_V2, WEASEL
 
 sys.path.append("../../..")
 
@@ -35,6 +35,39 @@ def load_from_ucr_tsv_to_dataframe_plain(full_file_path_and_name):
     df.columns -= 1
     return df, y
 
+dataset_names_excerpt = [
+    "ArrowHead",
+    "Beef",
+    "BeetleFly",
+    "BirdChicken",
+    "Car",
+    "CBF",
+    "Coffee",
+    "DiatomSizeReduction",
+    "DistalPhalanxOutlineAgeGroup",
+    "DistalPhalanxOutlineCorrect",
+    "DistalPhalanxTW",
+    "ECG200",
+    "ECGFiveDays",
+    "FaceAll",
+    "FaceFour",
+    "FacesUCR",
+    "GunPoint",
+    "ItalyPowerDemand",
+    "MiddlePhalanxOutlineAgeGroup",
+    "MiddlePhalanxOutlineCorrect",
+    "MiddlePhalanxTW",
+    "OliveOil",
+    "Plane",
+    "ProximalPhalanxOutlineAgeGroup",
+    "ProximalPhalanxOutlineCorrect",
+    "ProximalPhalanxTW",
+    "SonyAIBORobotSurface1",
+    "SonyAIBORobotSurface2",
+    "SyntheticControl",
+    "TwoLeadECG",
+    "Wine",
+]
 
 dataset_names_full = [
     "ACSF1",
@@ -160,6 +193,10 @@ def get_classifiers(threads_to_use):
             random_state=1379,
             n_jobs=threads_to_use
         ),
+        "WEASEL": WEASEL(
+            random_state=1379,
+            n_jobs=threads_to_use
+        ),
     }
     return clfs
 
@@ -168,7 +205,7 @@ def get_classifiers(threads_to_use):
 DATA_PATH = "/Users/bzcschae/workspace/UCRArchive_2018/"
 parallel_jobs = 1
 threads_to_use = 4
-used_dataset = dataset_names_full
+used_dataset = dataset_names_excerpt  # dataset_names_full
 server = False
 
 if __name__ == "__main__":
