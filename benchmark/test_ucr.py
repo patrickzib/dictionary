@@ -193,6 +193,7 @@ def get_classifiers(threads_to_use):
     clfs = {
         "WEASEL 2.0": WEASEL_V2(
             random_state=1379,
+            feature_selection="chi2_top_k",
             n_jobs=threads_to_use
         ),
         # "WEASEL": WEASEL(
@@ -342,7 +343,7 @@ if __name__ == "__main__":
         )
         print(
             "Total median-accuracy:",
-            np.round(np.median(sum_scores[name]["all_scores"]), 2),
+            np.round(np.median(sum_scores[name]["all_scores"]), 3),
         )
         print("Total fit_time:", np.round(sum_scores[name]["fit_time"], 2))
         print("Total pred_time:", np.round(sum_scores[name]["pred_time"], 2))
