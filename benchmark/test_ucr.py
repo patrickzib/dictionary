@@ -191,18 +191,30 @@ dataset_names_full = [
 def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
-        "WEASEL 2.0 - top-k": WEASEL_V2(
+        # "WEASEL 2.0 - top-k": WEASEL_V2(
+        #     random_state=1379,
+        #     feature_selection="chi2_top_k",
+        #     n_jobs=threads_to_use
+        # ),
+        # "WEASEL 2.0 - none": WEASEL_V2(
+        #     random_state=1379,
+        #     n_jobs=threads_to_use
+        # ),
+        "WEASEL a4": WEASEL(
             random_state=1379,
-            feature_selection="chi2_top_k",
-            n_jobs=threads_to_use
+            n_jobs=threads_to_use,
+            alphabet_size=4
         ),
-        "WEASEL 2.0 - none": WEASEL_V2(
+        "WEASEL a2": WEASEL(
             random_state=1379,
-            n_jobs=threads_to_use
+            n_jobs=threads_to_use,
+            alphabet_size = 2
         ),
-        "WEASEL": WEASEL(
+        "WEASEL a2, none": WEASEL(
             random_state=1379,
-            n_jobs=threads_to_use
+            n_jobs=threads_to_use,
+            alphabet_size=2,
+            feature_selection="none"
         ),
     }
     return clfs
@@ -294,9 +306,7 @@ if __name__ == "__main__":
                 and (len(clf.steps) > 0)
                 and hasattr(clf.steps[0][-1], "total_features_count")
                 else f""
-            )
-            # + (f",{train_acc}" if hasattr(clf, "cross_val_score") else f"")
-            ,
+            ),
             flush=True,
         )
         sum_scores[clf_name]["dataset"].append(dataset_name)

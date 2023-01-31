@@ -312,12 +312,7 @@ class SFADilation(BaseTransformer):
             self.words = words
 
         # fitting: learns the feature selection strategy, too
-        bag = self.transform_to_bag(words, self.word_length_actual, y)
-
-        # transform: applies the feature selection strategy
-        # bag = self.add_level(bag, words)
-        # bag[bag == 0] = -10
-        return bag
+        return self.transform_to_bag(words, self.word_length_actual, y)
 
     def add_level(self, bag, words):
         """Add one pyramid level."""
@@ -435,8 +430,6 @@ class SFADilation(BaseTransformer):
             return bb
         elif self.return_sparse:
             bags = csr_matrix(bags, dtype=np.uint32)
-
-        # bags[bags==0] = -10
         return bags
 
     def transform_to_bag(self, words, word_len, y=None):
