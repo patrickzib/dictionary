@@ -186,6 +186,7 @@ dataset_names_full = [
     "Yoga",
 ]
 
+
 def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
@@ -193,20 +194,31 @@ def get_classifiers(threads_to_use):
             random_state=1379,
             n_jobs=threads_to_use
         ),
-        "WEASEL": WEASEL(
-            random_state=1379,
-            n_jobs=threads_to_use
-        ),
+        # "WEASEL": WEASEL(
+        #     random_state=1379,
+        #     n_jobs=threads_to_use
+        # ),
     }
     return clfs
 
 
-### Configuration, adapt to your needs
+# Configuration, adapt to your needs
 DATA_PATH = "/Users/bzcschae/workspace/UCRArchive_2018/"
 parallel_jobs = 1
 threads_to_use = 4
 used_dataset = dataset_names_excerpt  # dataset_names_full
 server = False
+
+if os.path.exists(DATA_PATH):
+    DATA_PATH = "/Users/bzcschae/workspace/UCRArchive_2018/"
+    used_dataset = dataset_names_excerpt
+    server = False
+else:
+    DATA_PATH = "/vol/fob-wbib-vol2/wbi/schaefpa/sktime/datasets/UCRArchive_2018"
+    parallel_jobs = 40  # 20
+    threads_to_use = 1  # 1
+    used_dataset = dataset_names_full
+    server = True
 
 if __name__ == "__main__":
 
