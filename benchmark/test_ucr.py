@@ -195,19 +195,9 @@ def get_classifiers(threads_to_use):
             random_state=1379,
             n_jobs=threads_to_use
         ),
-        "WEASEL 2.0 / topk": WEASEL_V2(
-            random_state=1379,
-            feature_selection="chi2_top_k",
-            n_jobs=threads_to_use
-        ),
         "WEASEL": WEASEL(
             random_state=1379,
             n_jobs=threads_to_use,
-        ),
-        "WEASEL / topk": WEASEL(
-            random_state=1379,
-            n_jobs=threads_to_use,
-            feature_selection="chi2_top_k",
         ),
     }
     return clfs

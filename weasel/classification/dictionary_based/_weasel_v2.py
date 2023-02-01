@@ -55,7 +55,7 @@ class WEASEL_V2(BaseClassifier):
         If the array contains True, words are computed over first order differences.
         If the array contains False, words are computed over the raw time series.
         If both are set, words are computed for both.
-    feature_selection: {"chi2_top_k", "none", "random"}, default: none
+    feature_selection: {"chi2_top_k", "none", "random"}, default: chi2_top_k
         Sets the feature selections strategy to be used. Large amounts of memory may be
         needed depending on the setting of bigrams (true is more) or
         alpha (larger is more).
@@ -114,7 +114,7 @@ class WEASEL_V2(BaseClassifier):
             norm_options=[False],
             word_lengths=[7, 8],
             use_first_differences=[True, False],
-            feature_selection="none",
+            feature_selection="chi2_top_k",
             max_feature_count=30_000,
             random_state=None,
             n_jobs=4,
