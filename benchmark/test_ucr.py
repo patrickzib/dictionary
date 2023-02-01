@@ -8,6 +8,7 @@ import itertools
 import sys
 
 sys.path.insert(0, "./")
+sys.path.insert(0, "./../")
 
 import time
 from warnings import simplefilter
@@ -18,7 +19,7 @@ simplefilter(action="ignore", category=UserWarning)
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from weasel.classification.dictionary_based import WEASEL_V2
+from weasel.classification.dictionary_based import WEASEL_V2, WEASEL
 
 sys.path.append("../../..")
 
@@ -35,6 +36,39 @@ def load_from_ucr_tsv_to_dataframe_plain(full_file_path_and_name):
     df.columns -= 1
     return df, y
 
+dataset_names_excerpt = [
+    "ArrowHead",
+    "Beef",
+    "BeetleFly",
+    "BirdChicken",
+    "Car",
+    "CBF",
+    "Coffee",
+    "DiatomSizeReduction",
+    "DistalPhalanxOutlineAgeGroup",
+    "DistalPhalanxOutlineCorrect",
+    "DistalPhalanxTW",
+    "ECG200",
+    "ECGFiveDays",
+    "FaceAll",
+    "FaceFour",
+    "FacesUCR",
+    "GunPoint",
+    "ItalyPowerDemand",
+    "MiddlePhalanxOutlineAgeGroup",
+    "MiddlePhalanxOutlineCorrect",
+    "MiddlePhalanxTW",
+    "OliveOil",
+    "Plane",
+    "ProximalPhalanxOutlineAgeGroup",
+    "ProximalPhalanxOutlineCorrect",
+    "ProximalPhalanxTW",
+    "SonyAIBORobotSurface1",
+    "SonyAIBORobotSurface2",
+    "SyntheticControl",
+    "TwoLeadECG",
+    "Wine",
+]
 
 dataset_names_full = [
     "ACSF1",
@@ -153,6 +187,7 @@ dataset_names_full = [
     "Yoga",
 ]
 
+
 def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
@@ -160,16 +195,31 @@ def get_classifiers(threads_to_use):
             random_state=1379,
             n_jobs=threads_to_use
         ),
+        "WEASEL": WEASEL(
+            random_state=1379,
+            n_jobs=threads_to_use,
+        ),
     }
     return clfs
 
 
-### Configuration, adapt to your needs
+# Configuration, adapt to your needs
 DATA_PATH = "/Users/bzcschae/workspace/UCRArchive_2018/"
 parallel_jobs = 1
 threads_to_use = 4
-used_dataset = dataset_names_full
+used_dataset = dataset_names_excerpt  # dataset_names_full
 server = False
+
+if os.path.exists(DATA_PATH):
+    DATA_PATH = "/Users/bzcschae/workspace/UCRArchive_2018/"
+    used_dataset = dataset_names_excerpt
+    server = False
+else:
+    DATA_PATH = "/vol/fob-wbib-vol2/wbi/schaefpa/sktime/datasets/UCRArchive_2018"
+    parallel_jobs = 40  # 20
+    threads_to_use = 1  # 1
+    used_dataset = dataset_names_full
+    server = True
 
 if __name__ == "__main__":
 
@@ -239,9 +289,7 @@ if __name__ == "__main__":
                 and (len(clf.steps) > 0)
                 and hasattr(clf.steps[0][-1], "total_features_count")
                 else f""
-            )
-            # + (f",{train_acc}" if hasattr(clf, "cross_val_score") else f"")
-            ,
+            ),
             flush=True,
         )
         sum_scores[clf_name]["dataset"].append(dataset_name)
@@ -292,7 +340,7 @@ if __name__ == "__main__":
         )
         print(
             "Total median-accuracy:",
-            np.round(np.median(sum_scores[name]["all_scores"]), 2),
+            np.round(np.median(sum_scores[name]["all_scores"]), 3),
         )
         print("Total fit_time:", np.round(sum_scores[name]["fit_time"], 2))
         print("Total pred_time:", np.round(sum_scores[name]["pred_time"], 2))
