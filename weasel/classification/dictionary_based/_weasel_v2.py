@@ -86,7 +86,9 @@ class WEASEL_V2(BaseClassifier):
 
     References
     ----------
-    .. [1] 
+    .. [1] Patrick Schäfer and Ulf Leser, "WEASEL 2.0 -- A Random Dilated Dictionary
+    Transform for Fast, Accurate and Memory Constrained Time Series Classification",
+    Preprint, https://arxiv.org/abs/2301.10194
 
     Notes
     -----

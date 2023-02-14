@@ -8,7 +8,6 @@ __author__ = ["patrickzib", "Arik Ermshaus"]
 __all__ = ["WEASEL"]
 
 import math
-import warnings
 
 import numpy as np
 from joblib import Parallel, delayed
