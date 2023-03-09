@@ -11,7 +11,8 @@ pyproject = toml.load("pyproject.toml")
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
-    
+license = (this_directory / "LICENSE").read_text()
+
 """Set up package."""
 setup(
     author_email=pyproject["project"]["authors"][0]["email"],
@@ -21,7 +22,7 @@ setup(
     install_requires=pyproject["project"]["dependencies"],
     include_package_data=True,
     keywords=pyproject["project"]["keywords"],
-    license=pyproject["project"]["license"],
+    license=license,
     long_description=long_description,
     long_description_content_type='text/markdown',
     name=pyproject["project"]["name"],
@@ -33,12 +34,12 @@ setup(
             "*.arff.gz",
             "*.txt",
             "*.ts",
-            "*.tsv",
+            "*.tsv"
         ]
     },
     packages=find_packages(
         where=".",
-        exclude=["tests", "tests.*"],
+        exclude=["tests", "tests.*"]
     ),
     project_urls=pyproject["project"]["urls"],
     python_requires=pyproject["project"]["requires-python"],

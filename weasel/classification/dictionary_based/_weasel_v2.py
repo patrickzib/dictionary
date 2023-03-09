@@ -86,7 +86,9 @@ class WEASEL_V2(BaseClassifier):
 
     References
     ----------
-    .. [1] 
+    .. [1] Patrick Schäfer and Ulf Leser, "WEASEL 2.0 -- A Random Dilated Dictionary
+    Transform for Fast, Accurate and Memory Constrained Time Series Classification",
+    Preprint, https://arxiv.org/abs/2301.10194
 
     Notes
     -----
@@ -97,7 +99,7 @@ class WEASEL_V2(BaseClassifier):
     >>> from sktime.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
-    >>> clf = WEASEL_V2(window_inc=4)
+    >>> clf = WEASEL_V2()
     >>> clf.fit(X_train, y_train)
     WEASEL_V2(...)
     >>> y_pred = clf.predict(X_test)
