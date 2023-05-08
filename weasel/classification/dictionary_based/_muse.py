@@ -17,7 +17,7 @@ from scipy.sparse import hstack
 from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.utils import check_random_state
 
-from sktime.classification.base import BaseClassifier
+from aeon.classification.base import BaseClassifier
 from weasel.transformations.panel.dictionary_based import SFADilation
 
 
@@ -112,8 +112,8 @@ class MUSE(BaseClassifier):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import MUSE
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import MUSE
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = MUSE(window_inc=4, use_first_order_differences=False)

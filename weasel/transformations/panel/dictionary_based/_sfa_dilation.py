@@ -29,8 +29,8 @@ from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
 
-from sktime.transformations.base import BaseTransformer
-from sktime.utils.validation.panel import check_X
+from aeon.transformations.base import BaseTransformer
+from aeon.utils.validation.panel import check_X
 
 # The binning methods to use: equi-depth, equi-width, information gain or kmeans
 binning_methods = {"equi-depth", "equi-width", "information-gain", "kmeans", "quantile"}

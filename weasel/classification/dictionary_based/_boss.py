@@ -20,8 +20,8 @@ from sklearn.utils.fixes import delayed
 from sklearn.utils.sparsefuncs_fast import csr_row_norms
 from sklearn.utils.validation import _num_samples
 
-from sktime.classification.base import BaseClassifier
-from sktime.utils.validation.panel import check_X_y
+from aeon.classification.base import BaseClassifier
+from aeon.utils.validation.panel import check_X_y
 
 from weasel.transformations.panel.dictionary_based import SFADilation
 
@@ -117,8 +117,8 @@ class BOSSEnsemble(BaseClassifier):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import BOSSEnsemble
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import BOSSEnsemble
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = BOSSEnsemble(max_ensemble_size=3)
@@ -482,8 +482,8 @@ class IndividualBOSS(BaseClassifier):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import IndividualBOSS
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import IndividualBOSS
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = IndividualBOSS()

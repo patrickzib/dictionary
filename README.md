@@ -19,7 +19,7 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 
 ### Dependencies
 ```
-sktime >= 0.13,<=0.15
+aeon >= 0.1.0
 ```
 
 # Installation
@@ -48,10 +48,10 @@ pip install .
 
 ### Train a WEASEL 2.0 classifier
 
-WEASEL v2 follows the sktime pipeline.
+WEASEL v2 follows the aeon pipeline.
 
 ```python
-from sktime.datasets import load_arrow_head
+from aeon.datasets import load_arrow_head
 from weasel.classification.dictionary_based import WEASEL_V2
 
 X_train, y_train = load_arrow_head(split="train", return_type="numpy3d")

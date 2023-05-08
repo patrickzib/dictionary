@@ -114,8 +114,8 @@ class WEASEL(BaseClassifier):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import WEASEL
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import WEASEL
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = WEASEL(window_inc=4)
