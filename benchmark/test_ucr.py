@@ -191,14 +191,36 @@ dataset_names_full = [
 def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
-        "WEASEL 2.0": WEASEL_V2(
+        "WEASEL 2.0 6": WEASEL_V2(
             random_state=1379,
+            word_lengths=[6],
             n_jobs=threads_to_use
         ),
-        "WEASEL": WEASEL(
+        "WEASEL 2.0 7": WEASEL_V2(
             random_state=1379,
-            n_jobs=threads_to_use,
+            word_lengths=[7],
+            n_jobs=threads_to_use
         ),
+        "WEASEL 2.0 8": WEASEL_V2(
+            random_state=1379,
+            word_lengths=[8],
+            n_jobs=threads_to_use
+        ),
+        "WEASEL 2.0 9": WEASEL_V2(
+            random_state=1379,
+            word_lengths=[9],
+            n_jobs=threads_to_use
+        ),
+        "WEASEL 2.0 10": WEASEL_V2(
+            random_state=1379,
+            word_lengths=[10],
+            n_jobs=threads_to_use
+        ),
+
+        #"WEASEL": WEASEL(
+        #    random_state=1379,
+        #    n_jobs=threads_to_use,
+        #),
     }
     return clfs
 
