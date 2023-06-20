@@ -391,7 +391,7 @@ if __name__ == "__main__":
                 "Accuracy",
                 "Train-Acc",
             ],
-        ).to_csv("ucr-112-accuracy-sone.csv", index=None)
+        ).to_csv("ucr-112-accuracy-dictionary-size.csv", index=None)
 
         pd.DataFrame.from_records(
             csv_timings,
@@ -401,4 +401,4 @@ if __name__ == "__main__":
                 "Fit-Time",
                 "Predict-Time",
             ],
-        ).to_csv("ucr-112-runtime-sone.csv", index=None)
+        ).to_csv("ucr-112-runtime-dictionary-size.csv", index=None)
