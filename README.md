@@ -4,9 +4,7 @@ WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-param
 
 ArXiv-Paper: https://arxiv.org/abs/2301.10194
 
-Machine Learning Paper: https://link.springer.com/article/10.1007/s10994-023-06395-w
-
-The paper has been accepted within the journal track at ECML-PKDD 2023.
+The paper has been accepted within the journal track at ECML-PKDD 2023: https://link.springer.com/article/10.1007/s10994-023-06395-w
  
 ### Accuracy against dictionary classifiers
 ![UCR_accuracy_subset](https://user-images.githubusercontent.com/7783034/214376239-0115e87e-e426-45fc-8f70-1684989745cc.png)
@@ -66,7 +64,7 @@ clf.predict(X_test)
 
 ## Citing
 
-If you use this algorithm or publication, please cite (ArXiv: https://arxiv.org/abs/2301.10194):
+If you use this algorithm or publication, please cite:
 
 ```bibtex
 @article{schaefer2023weasel,
