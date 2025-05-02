@@ -16,8 +16,8 @@ from scipy.sparse import hstack
 from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.utils import check_random_state
 
-from sktime.classification.base import BaseClassifier
-from weasel.transformations.panel.dictionary_based import SFADilation
+from aeon.classification.base import BaseClassifier
+from weasel.transformations.collection.dictionary_based import SFADilation
 
 
 class WEASEL(BaseClassifier):
@@ -210,7 +210,7 @@ class WEASEL(BaseClassifier):
         self.window_sizes = list(range(self.min_window, self.max_window, win_inc))
         self.highest_bit = (math.ceil(math.log2(self.max_window))) + 1
 
-        parallel_res = Parallel(n_jobs=self.n_jobs, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(_parallel_fit)(
                 X,
                 y,
@@ -297,7 +297,7 @@ class WEASEL(BaseClassifier):
             )
 
     def _transform_words(self, X):
-        parallel_res = Parallel(n_jobs=self._threads_to_use, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(transformer.transform)(X) for transformer in self.SFA_transformers
         )
         all_words = []

@@ -23,23 +23,28 @@ from numba import (  # set_num_threads,
 )
 from numba.core import types
 from numba.typed import Dict
+import scipy.fft
 from scipy.sparse import csr_matrix, hstack
 from sklearn.feature_selection import chi2, f_classif
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
 
-from aeon.transformations.base import BaseTransformer
-from aeon.utils.validation.panel import check_X
+from aeon.transformations.collection import BaseCollectionTransformer
 
 # The binning methods to use: equi-depth, equi-width, information gain or kmeans
-binning_methods = {"equi-depth", "equi-width", "information-gain", "kmeans", "quantile"}
+binning_methods = {
+    "equi-depth",
+    "equi-width",
+    "information-gain",
+    "kmeans",
+    "quantile"}
 
 simplefilter(action="ignore", category=NumbaPendingDeprecationWarning)
 simplefilter(action="ignore", category=NumbaTypeSafetyWarning)
 
 
-class SFADilation(BaseTransformer):
+class SFADilation(BaseCollectionTransformer):
     """Symbolic Fourier Approximation (SFA) Transformer.
 
     Overview: for each series:
@@ -146,41 +151,35 @@ class SFADilation(BaseTransformer):
     """
 
     _tags = {
-        "univariate-only": True,
-        "scitype:transform-input": "Series",
-        # what is the scitype of X: Series, or Panel
-        "scitype:transform-output": "Series",
-        # what scitype is returned: Primitives, Series, Panel
-        "scitype:instancewise": False,  # is this an instance-wise transform?
-        "X_inner_mtype": "numpy3D",  # which mtypes do _fit/_predict support for X?
-        "y_inner_mtype": "pd_Series_Table",  # which mtypes does y require?
-        "requires_y": True,  # does y need to be passed in fit?
+        "requires_y": False,  # SFA is unsupervised for equi-depth and equi-width bins
+        "capability:multithreading": True,
+        "algorithm_type": "dictionary",
     }
 
     def __init__(
-        self,
-        word_length=8,
-        alphabet_size=4,
-        window_size=12,
-        norm=False,
-        binning_method="equi-depth",
-        anova=False,
-        variance=False,
-        bigrams=False,
-        skip_grams=False,
-        remove_repeat_words=False,
-        lower_bounding=True,
-        save_words=False,
-        dilation=0,
-        first_difference=False,
-        feature_selection="none",
-        sections=1,
-        max_feature_count=256,
-        p_threshold=0.05,
-        random_state=None,
-        return_sparse=True,
-        return_pandas_data_series=False,
-        n_jobs=1,
+            self,
+            word_length=8,
+            alphabet_size=4,
+            window_size=12,
+            norm=False,
+            binning_method="equi-depth",
+            anova=False,
+            variance=False,
+            bigrams=False,
+            skip_grams=False,
+            remove_repeat_words=False,
+            lower_bounding=True,
+            save_words=False,
+            dilation=0,
+            first_difference=False,
+            feature_selection="none",
+            sections=1,
+            max_feature_count=256,
+            p_threshold=0.05,
+            random_state=None,
+            return_sparse=True,
+            return_pandas_data_series=False,
+            n_jobs=1,
     ):
         self.words = []
         self.breakpoints = []
@@ -242,7 +241,7 @@ class SFADilation(BaseTransformer):
         if not return_pandas_data_series:
             self._output_convert = "off"
 
-    def fit_transform(self, X, y=None):
+    def _fit_transform(self, X, y=None, return_bag_of_words=True):
         """Fit to data, then transform it."""
         if self.alphabet_size < 2:
             raise ValueError("Alphabet size must be an integer greater than 2")
@@ -262,6 +261,7 @@ class SFADilation(BaseTransformer):
 
         offset = 2 if self.norm else 0
         self.word_length_actual = min(self.window_size - offset, self.word_length)
+
         self.dft_length = (
             self.window_size - offset
             if (self.anova or self.variance) is True
@@ -275,7 +275,6 @@ class SFADilation(BaseTransformer):
         self.letter_bits = np.uint32(math.ceil(math.log2(self.alphabet_size)))
         # self.word_bits = self.word_length_actual * self.letter_bits
 
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         if self.dilation >= 1 or self.first_difference:
@@ -287,32 +286,37 @@ class SFADilation(BaseTransformer):
         self.breakpoints = self._binning(X2, y)
         self._is_fitted = True
 
-        words, dfts = _transform_case(
-            X2,
-            self.window_size,
-            self.dft_length,
-            self.word_length_actual,
-            self.norm,
-            self.remove_repeat_words,
-            self.support,
-            self.anova,
-            self.variance,
-            self.breakpoints,
-            self.letter_bits,
-            self.bigrams,
-            self.skip_grams,
-            self.inverse_sqrt_win_size,
-            self.lower_bounding,
-        )
-
-        if self.remove_repeat_words:
-            words = remove_repeating_words(words)
-
-        if self.save_words:
-            self.words = words
-
         # fitting: learns the feature selection strategy, too
-        return self.transform_to_bag(words, self.word_length_actual, y)
+        if return_bag_of_words:
+            words, dfts = _transform_case(
+                X2,
+                self.window_size,
+                self.dft_length,
+                self.word_length_actual,
+                self.norm,
+                self.remove_repeat_words,
+                self.support,
+                self.anova,
+                self.variance,
+                self.breakpoints,
+                self.letter_bits,
+                self.bigrams,
+                self.skip_grams,
+                self.inverse_sqrt_win_size,
+                self.lower_bounding,
+            )
+
+            if self.remove_repeat_words:
+                words = remove_repeating_words(words)
+
+            if self.save_words:
+                self.words = words
+
+            # fitting: learns the feature selection strategy, too
+            return self.transform_to_bag(words, self.word_length_actual, y)
+        else:
+            return None
+
 
     def add_level(self, bag, words):
         """Add one pyramid level."""
@@ -346,7 +350,7 @@ class SFADilation(BaseTransformer):
         else:
             return hstack([bag, bag_lvl2_l, bag_lvl2_r])
 
-    def fit(self, X, y=None):
+    def _fit(self, X, y=None):
         """Calculate word breakpoints using MCB or IGB.
 
         Parameters
@@ -359,10 +363,10 @@ class SFADilation(BaseTransformer):
         self: object
         """
         # with parallel_backend("loky", inner_max_num_threads=n_jobs):
-        self.fit_transform(X, y)
+        self.fit_transform(X, y, return_bag_of_words=False)
         return self
 
-    def transform(self, X, y=None):
+    def _transform(self, X, y=None):
         """Transform data into SFA words.
 
         Parameters
@@ -374,8 +378,6 @@ class SFADilation(BaseTransformer):
         -------
         List of dictionaries containing SFA words
         """
-        self.check_is_fitted()
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         if self.dilation >= 1 or self.first_difference:
@@ -438,9 +440,9 @@ class SFADilation(BaseTransformer):
         rng = check_random_state(self.random_state)
 
         if self.feature_selection == "none" and (
-            self.breakpoints.shape[1] <= 2
-            and not self.bigrams
-            and self.word_length <= 8
+                self.breakpoints.shape[1] <= 2
+                and not self.bigrams
+                and self.word_length <= 8
         ):
             bag_of_words = create_bag_none(
                 self.X_index,
@@ -487,7 +489,7 @@ class SFADilation(BaseTransformer):
             # a) the top-k features
             # b) a p-threshold
             elif self.feature_selection == "chi2_top_k" \
-                 or self.feature_selection == "chi2":
+                    or self.feature_selection == "chi2":
                 feature_names_array = np.array(list(feature_names))
                 feature_count = len(feature_names_array)
                 relevant_features_idx = np.arange(feature_count, dtype=np.uint32)
@@ -696,13 +698,13 @@ class SFADilation(BaseTransformer):
 
 @njit(fastmath=True, cache=True)
 def _binning_dft(
-    X,
-    window_size,
-    series_length,
-    dft_length,
-    norm,
-    inverse_sqrt_win_size,
-    lower_bounding,
+        X,
+        window_size,
+        series_length,
+        dft_length,
+        norm,
+        inverse_sqrt_win_size,
+        lower_bounding,
 ):
     num_windows_per_inst = math.ceil(series_length / window_size)
 
@@ -710,7 +712,7 @@ def _binning_dft(
     data = np.zeros((len(X), num_windows_per_inst, window_size))
     for i in prange(len(X)):
         for j in range(num_windows_per_inst - 1):
-            data[i, j] = X[i, window_size * j : window_size * (j + 1)]
+            data[i, j] = X[i, window_size * j: window_size * (j + 1)]
 
         start = series_length - window_size
         data[i, -1] = X[i, start:series_length]
@@ -757,11 +759,12 @@ def _fast_fourier_transform(X, norm, dft_length, inverse_sqrt_win_size):
     stds = np.where(stds < 1e-8, 1, stds)
 
     with objmode(X_ffts="complex128[:,:]"):
-        X_ffts = np.fft.rfft(X, axis=1)  # complex128
+        X_ffts = scipy.fft.rfft(X, axis=1, workers=-1).astype(np.complex128)
+
     reals = np.real(X_ffts)  # float64[]
     imags = np.imag(X_ffts)  # float64[]
-    dft[:, 0::2] = reals[:, 0 : length // 2]
-    dft[:, 1::2] = imags[:, 0 : length // 2]
+    dft[:, 0::2] = reals[:, 0: length // 2]
+    dft[:, 1::2] = imags[:, 0: length // 2]
     dft /= stds.reshape(-1, 1)
     dft *= inverse_sqrt_win_size
 
@@ -770,21 +773,21 @@ def _fast_fourier_transform(X, norm, dft_length, inverse_sqrt_win_size):
 
 @njit(fastmath=True, cache=True)
 def _transform_case(
-    X,
-    window_size,
-    dft_length,
-    word_length,
-    norm,
-    remove_repeat_words,
-    support,
-    anova,
-    variance,
-    breakpoints,
-    letter_bits,
-    bigrams,
-    skip_grams,
-    inverse_sqrt_win_size,
-    lower_bounding,
+        X,
+        window_size,
+        dft_length,
+        word_length,
+        norm,
+        remove_repeat_words,
+        support,
+        anova,
+        variance,
+        breakpoints,
+        letter_bits,
+        bigrams,
+        skip_grams,
+        inverse_sqrt_win_size,
+        lower_bounding,
 ):
     dfts = _mft(
         X,
@@ -844,8 +847,8 @@ def _calc_incremental_mean_std(series, end, window_size):
         series_sum += series[w + window_size - 1] - series[w - 1]
         mean = series_sum * r_window_length
         square_sum += (
-            series[w + window_size - 1] * series[w + window_size - 1]
-            - series[w - 1] * series[w - 1]
+                series[w + window_size - 1] * series[w + window_size - 1]
+                - series[w - 1] * series[w - 1]
         )
         buf = math.sqrt(max(square_sum * r_window_length - mean * mean, 0.0))
         stds[w] = buf if buf > 1e-8 else 1
@@ -865,7 +868,7 @@ def _get_phis(window_size, length):
 
 @njit(fastmath=True, cache=True)
 def generate_words(
-    dfts, bigrams, skip_grams, window_size, breakpoints, word_length, letter_bits
+        dfts, bigrams, skip_grams, window_size, breakpoints, word_length, letter_bits
 ):
     needed_size = dfts.shape[1]
     if bigrams:
@@ -895,8 +898,10 @@ def generate_words(
         for a in prange(dfts.shape[0]):
             for i in range(word_length):  # range(dfts.shape[2]):
                 words[a, : dfts.shape[1]] = (
-                    words[a, : dfts.shape[1]] << letter_bits
-                ) | np.digitize(dfts[a, :, i], breakpoints[i], right=True)
+                                                    words[a,
+                                                    : dfts.shape[1]] << letter_bits
+                                            ) | np.digitize(dfts[a, :, i],
+                                                            breakpoints[i], right=True)
 
     # add bigrams
     if bigrams:
@@ -918,15 +923,15 @@ def generate_words(
 
 @njit(fastmath=True, cache=True)
 def _mft(
-    X,
-    window_size,
-    dft_length,
-    norm,
-    support,
-    anova,
-    variance,
-    inverse_sqrt_win_size,
-    lower_bounding,
+        X,
+        window_size,
+        dft_length,
+        norm,
+        support,
+        anova,
+        variance,
+        inverse_sqrt_win_size,
+        lower_bounding,
 ):
     start_offset = 2 if norm else 0
     length = dft_length + start_offset + dft_length % 2
@@ -956,8 +961,8 @@ def _mft(
         X_ffts = np.fft.rfft(X[:, :window_size], axis=1)  # complex128
     reals = np.real(X_ffts)  # float64[]
     imags = np.imag(X_ffts)  # float64[]
-    transformed[:, 0, 0::2] = reals[:, 0 : length // 2]
-    transformed[:, 0, 1::2] = imags[:, 0 : length // 2]
+    transformed[:, 0, 0::2] = reals[:, 0: length // 2]
+    transformed[:, 0, 1::2] = imags[:, 0: length // 2]
 
     # 2. Other runs using MFT
     # X2 = X.reshape(X.shape[0], X.shape[1], 1)
@@ -971,10 +976,10 @@ def _mft(
         reals = transformed2[:, i - 1, 0::2] + X2[:, i + window_size - 1] - X2[:, i - 1]
         imags = transformed2[:, i - 1, 1::2]
         transformed2[:, i, 0::2] = (
-            reals * phis2[:length:2] - imags * phis2[1 : (length + 1) : 2]
+                reals * phis2[:length:2] - imags * phis2[1: (length + 1): 2]
         )
         transformed2[:, i, 1::2] = (
-            reals * phis2[1 : (length + 1) : 2] + phis2[:length:2] * imags
+                reals * phis2[1: (length + 1): 2] + phis2[:length:2] * imags
         )
 
     transformed2 = transformed2 * inverse_sqrt_win_size
@@ -992,8 +997,8 @@ def _mft(
         return transformed2[:, :, mask] / stds.reshape(stds.shape[0], stds.shape[1], 1)
     else:
         return (transformed2 / stds.reshape(stds.shape[0], stds.shape[1], 1))[
-            :, :, start_offset:
-        ]
+               :, :, start_offset:
+               ]
 
 
 def _dilation(X, d, first_difference):
@@ -1006,8 +1011,9 @@ def _dilation(X, d, first_difference):
 
     # adding dilation
     X_dilated = _dilation2(X, d)
-    X_index = _dilation2(np.arange(X_dilated.shape[-1], dtype=np.float_)
-                         .reshape(1, -1), d)[0]
+    X_index = _dilation2(
+        np.arange(X_dilated.shape[-1], dtype=np.float64).reshape(1, -1), d
+    )[0]
 
     return (
         X_dilated,
@@ -1020,15 +1026,15 @@ def _dilation2(X, d):
     # dilation on actual data
     if d > 1:
         start = 0
-        data = np.zeros(X.shape, dtype=np.float_)
+        data = np.zeros(X.shape, dtype=np.float64)
         for i in range(0, d):
             curr = X[:, i::d]
             end = curr.shape[1]
-            data[:, start : start + end] = curr
+            data[:, start: start + end] = curr
             start += end
         return data
     else:
-        return X.astype(np.float_)
+        return X.astype(np.float64)
 
 
 @njit(cache=True, fastmath=True)
@@ -1042,13 +1048,13 @@ def create_feature_names(sfa_words):
 
 @njit(cache=True, fastmath=True)
 def create_bag_none(
-    X_index,
-    breakpoints,
-    n_instances,
-    sfa_words,
-    word_length,
-    remove_repeat_words,
-    sections,
+        X_index,
+        breakpoints,
+        n_instances,
+        sfa_words,
+        word_length,
+        remove_repeat_words,
+        sections,
 ):
     feature_count = np.uint32(breakpoints.shape[1] ** word_length)
     needed_size = feature_count
@@ -1089,18 +1095,18 @@ def create_bag_none(
 
 @njit(cache=True, fastmath=True)
 def create_bag_feature_selection(
-    X_index,
-    n_instances,
-    relevant_features_idx,
-    feature_names,
-    sfa_words,
-    remove_repeat_words,
-    sections,
+        X_index,
+        n_instances,
+        relevant_features_idx,
+        feature_names,
+        sfa_words,
+        remove_repeat_words,
+        sections,
 ):
     relevant_features = Dict.empty(key_type=types.uint32, value_type=types.uint32)
     for k, v in zip(
-        feature_names[relevant_features_idx],
-        np.arange(len(relevant_features_idx), dtype=np.uint32),
+            feature_names[relevant_features_idx],
+            np.arange(len(relevant_features_idx), dtype=np.uint32),
     ):
         relevant_features[k] = v
 
@@ -1141,13 +1147,13 @@ def create_bag_feature_selection(
 
 @njit(cache=True, fastmath=True)
 def create_bag_transform(
-    X_index,
-    feature_count,
-    feature_selection,
-    relevant_features,
-    sfa_words,
-    remove_repeat_words,
-    sections,
+        X_index,
+        feature_count,
+        feature_selection,
+        relevant_features,
+        sfa_words,
+        remove_repeat_words,
+        sections,
 ):
     all_win_words = np.zeros((len(sfa_words), feature_count), np.int32)
     for j in prange(sfa_words.shape[0]):
@@ -1190,7 +1196,7 @@ def create_bag_transform(
                     #    all_win_words[j, feature_count // 2 + sfa_words[j, i]],
                     # )
 
-            all_win_words[:, feature_count // 2 :] = section_count.sum(axis=-1)
+            all_win_words[:, feature_count // 2:] = section_count.sum(axis=-1)
         # else:
         #     section_count = np.zeros(
         #         (sfa_words.shape[0], feature_count // 2, sections), dtype=np.uint32
@@ -1216,12 +1222,13 @@ def create_dict(feature_names, features_idx):
         key_type=types.uint32, value_type=types.uint32
     )
     for k, v in zip(
-        feature_names[features_idx],
-        np.arange(len(features_idx), dtype=np.uint32),
+            feature_names[features_idx],
+            np.arange(len(features_idx), dtype=np.uint32),
     ):
         relevant_features[k] = v
 
     return relevant_features
+
 
 @njit(fastmath=True, cache=True)
 def shorten_words(words, amount, letter_bits):

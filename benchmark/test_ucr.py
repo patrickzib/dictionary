@@ -19,7 +19,7 @@ simplefilter(action="ignore", category=UserWarning)
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from weasel.classification.dictionary_based import WEASEL_V2, WEASEL
+from weasel.classification.dictionary_based import WEASEL_V2, WEASEL, BOSSEnsemble, MUSE, MUSE_V2
 
 sys.path.append("../../..")
 
@@ -35,6 +35,7 @@ def load_from_ucr_tsv_to_dataframe_plain(full_file_path_and_name):
     y = df.pop(0).values
     df.columns -= 1
     return df, y
+
 
 dataset_names_excerpt = [
     "ArrowHead",
@@ -192,12 +193,24 @@ def get_classifiers(threads_to_use):
     """Obtain the benchmark classifiers."""
     clfs = {
         "WEASEL 2.0": WEASEL_V2(
-            random_state=1379,
-            n_jobs=threads_to_use
+           random_state=1379,
+           n_jobs=threads_to_use
         ),
         "WEASEL": WEASEL(
+           random_state=1379,
+           n_jobs=threads_to_use,
+        ),
+        "BOSS": BOSSEnsemble(
             random_state=1379,
             n_jobs=threads_to_use,
+        ),
+        "MUSE": MUSE(
+           random_state=1379,
+           n_jobs=threads_to_use,
+        ),
+        "MUSE 2.0": MUSE_V2(
+           random_state=1379,
+           n_jobs=threads_to_use,
         ),
     }
     return clfs
@@ -250,6 +263,7 @@ if __name__ == "__main__":
         else:
             return make_run(X_test, X_train, clf_name, dataset_name, y_test, y_train)
 
+
     def make_run(X_test, X_train, clf_name, dataset_name, y_test, y_train):
         """Run experiments."""
         sum_scores = {
@@ -286,8 +300,8 @@ if __name__ == "__main__":
             + (
                 f",{clf.steps[0][-1].total_features_count}"
                 if hasattr(clf, "steps")
-                and (len(clf.steps) > 0)
-                and hasattr(clf.steps[0][-1], "total_features_count")
+                   and (len(clf.steps) > 0)
+                   and hasattr(clf.steps[0][-1], "total_features_count")
                 else f""
             ),
             flush=True,
@@ -299,10 +313,11 @@ if __name__ == "__main__":
         sum_scores[clf_name]["all_pred"].append(pred_time)
         sum_scores[clf_name]["fit_time"] += sum_scores[clf_name]["fit_time"] + fit_time
         sum_scores[clf_name]["pred_time"] += (
-            sum_scores[clf_name]["pred_time"] + pred_time
+                sum_scores[clf_name]["pred_time"] + pred_time
         )
 
         return sum_scores
+
 
     # with parallel_backend("threading", n_jobs=-1):
     parallel_res = Parallel(n_jobs=parallel_jobs, timeout=9999999, batch_size=1)(

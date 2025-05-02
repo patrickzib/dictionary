@@ -16,14 +16,12 @@ from joblib import Parallel, effective_n_jobs
 from sklearn.metrics import pairwise
 from sklearn.utils import check_random_state, gen_even_slices
 from sklearn.utils.extmath import safe_sparse_dot
-from sklearn.utils.fixes import delayed
+from sklearn.utils.parallel import delayed
 from sklearn.utils.sparsefuncs_fast import csr_row_norms
 from sklearn.utils.validation import _num_samples
 
 from aeon.classification.base import BaseClassifier
-from aeon.utils.validation.panel import check_X_y
-
-from weasel.transformations.panel.dictionary_based import SFADilation
+from weasel.transformations.collection.dictionary_based import SFADilation
 
 
 class BOSSEnsemble(BaseClassifier):
@@ -343,54 +341,6 @@ class BOSSEnsemble(BaseClassifier):
 
         return min_acc, min_acc_idx
 
-    def _get_train_probs(self, X, y):
-        self.check_is_fitted()
-        X, y = check_X_y(X, y, coerce_to_numpy=True, enforce_univariate=True)
-
-        n_instances, _, series_length = X.shape
-
-        if n_instances != self.n_instances_ or series_length != self.series_length_:
-            raise ValueError(
-                "n_instances, series_length mismatch. X should be "
-                "the same as the training data used in fit for generating train "
-                "probabilities."
-            )
-
-        results = np.zeros((n_instances, self.n_classes_))
-        divisors = np.zeros(n_instances)
-
-        if self.save_train_predictions:
-            for clf in self.estimators_:
-                preds = clf._train_predictions
-                for n, pred in enumerate(preds):
-                    results[n][self._class_dictionary[pred]] += 1
-                    divisors[n] += 1
-
-        else:
-            for i, clf in enumerate(self.estimators_):
-                if self._transformed_data.shape[1] > 0:
-                    distance_matrix = pairwise_distances(
-                        clf._transformed_data,
-                        use_boss_distance=self.use_boss_distance,
-                        n_jobs=self.n_jobs,
-                    )
-
-                    preds = []
-                    for i in range(n_instances):
-                        preds.append(clf._train_predict(i, distance_matrix))
-
-                    for n, pred in enumerate(preds):
-                        results[n][self._class_dictionary[pred]] += 1
-                        divisors[n] += 1
-
-        for i in range(n_instances):
-            results[i] = (
-                np.ones(self.n_classes_) * (1 / self.n_classes_)
-                if divisors[i] == 0
-                else results[i] / (np.ones(self.n_classes_) * divisors[i])
-            )
-
-        return results
 
     def _individual_train_acc(self, boss, y, train_size, lowest_acc):
         correct = 0
@@ -580,6 +530,10 @@ class IndividualBOSS(BaseClassifier):
             Predicted class labels.
         """
         test_bags = self._transformer.transform(X)
+        data_type = type(self._class_vals[0])
+        if data_type in [np.str_, str]:
+            data_type = "object"
+
         classes = np.zeros(test_bags.shape[0], dtype=type(self._class_vals[0]))
 
         if self._transformed_data.shape[1] > 0:
@@ -624,11 +578,14 @@ class IndividualBOSS(BaseClassifier):
         new_boss.n_classes_ = self.n_classes_
         new_boss.classes_ = self.classes_
         new_boss._class_dictionary = self._class_dictionary
-        new_boss._is_fitted = True
+        new_boss.metadata_ = self.metadata_
+        new_boss.is_fitted = True
 
         return new_boss
 
     def _clean(self):
+        if self._transformer is None:
+            return
         self._transformer.words = None
         self._transformer.save_words = False
 
@@ -648,7 +605,7 @@ def _dist_wrapper(dist_matrix, X, Y, s, XX_all=None, XY_all=None):
 
 
 def pairwise_distances(X, Y=None, use_boss_distance=False, n_jobs=1):
-    """Find the euclidean distance between all pairs of bop-models."""
+    """Find the Euclidean distance between all pairs of bop-models."""
     if use_boss_distance:
         if Y is None:
             Y = X
@@ -659,7 +616,7 @@ def pairwise_distances(X, Y=None, use_boss_distance=False, n_jobs=1):
         distance_matrix = np.zeros((X.shape[0], Y.shape[0]))
 
         if effective_n_jobs(n_jobs) > 1:
-            Parallel(n_jobs=n_jobs, backend="threading")(
+            Parallel(n_jobs=n_jobs, prefer="threads")(
                 delayed(_dist_wrapper)(distance_matrix, X, Y, s, XX_row_norms, XY)
                 for s in gen_even_slices(_num_samples(X), effective_n_jobs(n_jobs))
             )

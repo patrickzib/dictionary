@@ -16,7 +16,7 @@ from sklearn.linear_model import RidgeClassifierCV
 from sklearn.utils import check_random_state
 from aeon.classification.base import BaseClassifier
 
-from weasel.transformations.panel.dictionary_based import SFADilation
+from weasel.transformations.collection.dictionary_based import SFADilation
 
 
 class WEASEL_V2(BaseClassifier):
@@ -201,7 +201,7 @@ class WEASEL_V2(BaseClassifier):
         # Randomly choose window sizes
         self.window_sizes = np.arange(self.min_window, self.max_window + 1, 1)
 
-        parallel_res = Parallel(n_jobs=self.n_jobs, timeout=99999, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, timeout=99999, prefer="threads")(
             delayed(_parallel_fit)(
                 i,
                 XX,
@@ -290,7 +290,7 @@ class WEASEL_V2(BaseClassifier):
     def _transform_words(self, X):
         XX = X.squeeze(1)
 
-        parallel_res = Parallel(n_jobs=self.n_jobs, timeout=99999, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, timeout=99999, prefer="threads")(
             delayed(transformer.transform)(XX) for transformer in self.SFA_transformers
         )
 

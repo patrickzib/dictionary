@@ -19,7 +19,7 @@ from sklearn.linear_model import RidgeClassifierCV
 from sklearn.utils import check_random_state
 from aeon.classification.base import BaseClassifier
 
-from weasel.transformations.panel.dictionary_based import SFADilation
+from weasel.transformations.collection.dictionary_based import SFADilation
 
 
 class MUSE_V2(BaseClassifier):
@@ -196,7 +196,7 @@ class MUSE_V2(BaseClassifier):
 
         self.window_sizes = np.arange(self.min_window, self.max_window + 1, 1)
 
-        parallel_res = Parallel(n_jobs=self.n_jobs, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(_parallel_fit)(
                 ind,
                 X,
@@ -285,7 +285,7 @@ class MUSE_V2(BaseClassifier):
         if self.use_first_differences:
             X = self._add_first_order_differences(X)
 
-        parallel_res = Parallel(n_jobs=self._threads_to_use, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(_parallel_transform_words)(X, self.SFA_transformers[ind])
             for ind in range(self.ensemble_size)
         )

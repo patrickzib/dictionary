@@ -18,7 +18,7 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.utils import check_random_state
 
 from aeon.classification.base import BaseClassifier
-from weasel.transformations.panel.dictionary_based import SFADilation
+from weasel.transformations.collection.dictionary_based import SFADilation
 
 
 class MUSE(BaseClassifier):
@@ -209,7 +209,7 @@ class MUSE(BaseClassifier):
         if self.variance and self.anova:
             raise ValueError("MUSE Warning: Please set either variance or anova.")
 
-        parallel_res = Parallel(n_jobs=self.n_jobs, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(_parallel_fit)(
                 X,
                 y.copy(),  # no clue why, but this copy is required.
@@ -311,7 +311,7 @@ class MUSE(BaseClassifier):
         if self.use_first_order_differences:
             X = self._add_first_order_differences(X)
 
-        parallel_res = Parallel(n_jobs=self._threads_to_use, backend="threading")(
+        parallel_res = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(_parallel_transform_words)(
                 X, self.window_sizes, self.SFA_transformers, ind
             )
