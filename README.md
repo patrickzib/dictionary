@@ -2,8 +2,9 @@
 
 WEASEL 2.0 combines a novel dilation mapping, small dictionaries and hyper-parameter ensembling to obtain a fast, accurate, and constrained memory TSC. WEASEL 2.0 is significantly more accurate than its predecessor dictionary methods (BOSS, TDE, WEASEL), and in the same group as SotA non-ensemble methods. 
 
- ArXiv-Paper: https://arxiv.org/abs/2301.10194
- 
+ArXiv-Paper: https://arxiv.org/abs/2301.10194
+
+The paper has been accepted within the journal track at ECML-PKDD 2023: https://link.springer.com/article/10.1007/s10994-023-06395-w
  
 ### Accuracy against dictionary classifiers
 ![UCR_accuracy_subset](https://user-images.githubusercontent.com/7783034/214376239-0115e87e-e426-45fc-8f70-1684989745cc.png)
@@ -63,13 +64,17 @@ clf.predict(X_test)
 
 ## Citing
 
-If you use this algorithm or publication, please cite (ArXiv: https://arxiv.org/abs/2301.10194):
+If you use this algorithm or publication, please cite:
 
 ```bibtex
-@article{schaefer2023weasel2,
-  author = {Schäfer, Patrick and Leser, Ulf},
-  title = {{WEASEL 2.0 - A Random Dilated Dictionary Transform for Fast, Accurate and Memory Constrained Time Series Classification}},
-  journal={arXiv preprint arXiv:2301.10194},
-  year = {2023},
+@article{schaefer2023weasel,
+  title={WEASEL 2.0: a random dilated dictionary transform for fast, accurate and memory constrained time series classification},
+  author={Sch{\"a}fer, Patrick and Leser, Ulf},
+  journal={Machine Learning},
+  volume={112},
+  number={12},
+  pages={4763--4788},
+  year={2023},
+  publisher={Springer}
 }
 ```
