@@ -62,6 +62,12 @@ clf.fit(X_train,y_train)
 clf.predict(X_test)
 ```
 
+
+## AEON
+
+WEASEL v2 is part of the `aeon` toolkit, too: https://github.com/aeon-toolkit/aeon
+
+
 ## Citing
 
 If you use this algorithm or publication, please cite:
